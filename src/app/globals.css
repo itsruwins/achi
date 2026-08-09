@@ -53,6 +53,26 @@
 
   --focus: var(--primary);
 
+  /*
+    Chart colors. Separate from the UI palette because they answer to different
+    rules: --primary is tuned to look right as a button, and measures slightly
+    under the chroma floor a data mark needs to read as data rather than chrome.
+    Every value below was checked with the palette validator (lightness band,
+    chroma floor, monotone steps, contrast vs surface) rather than picked by eye.
+
+    --viz-mark  single-series marks (forecast bars). One colour for every bar —
+                shading bars by their own value would re-encode bar length as
+                hue and spend the identity channel on nothing.
+    --viz-1..4  one ordered ramp, used for magnitude (activity heatmap) and for
+                ordered buckets (card maturity). Always low → high.
+  */
+  --viz-mark: #0a8a6c;
+  --viz-1: #74c1ad;
+  --viz-2: #3fa88d;
+  --viz-3: #17876d;
+  --viz-4: #0a5343;
+  --viz-empty: #ece8e1;
+
   /* Radii */
   --radius-control: 0.625rem;
   --radius-card: 1rem;
@@ -98,6 +118,13 @@
     --info: #6fa8dc;
     --info-subtle: #14212e;
 
+    --viz-mark: #34ab8b;
+    --viz-1: #177a63;
+    --viz-2: #2f9d82;
+    --viz-3: #5cbfa4;
+    --viz-4: #8fd6c1;
+    --viz-empty: #2a2620;
+
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
     --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.35);
     --shadow-modal: 0 8px 12px rgb(0 0 0 / 0.4), 0 24px 48px rgb(0 0 0 / 0.5);
@@ -136,6 +163,13 @@
   --danger-subtle: #331a16;
   --info: #6fa8dc;
   --info-subtle: #14212e;
+
+  --viz-mark: #34ab8b;
+  --viz-1: #177a63;
+  --viz-2: #2f9d82;
+  --viz-3: #5cbfa4;
+  --viz-4: #8fd6c1;
+  --viz-empty: #2a2620;
 
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
   --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.35);
@@ -179,6 +213,13 @@
   --shadow-card: var(--shadow-card);
   --shadow-raised: var(--shadow-raised);
   --shadow-modal: var(--shadow-modal);
+
+  --color-viz-mark: var(--viz-mark);
+  --color-viz-1: var(--viz-1);
+  --color-viz-2: var(--viz-2);
+  --color-viz-3: var(--viz-3);
+  --color-viz-4: var(--viz-4);
+  --color-viz-empty: var(--viz-empty);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

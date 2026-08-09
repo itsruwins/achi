@@ -45,6 +45,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                   </span>
                 ) : null}
               </Link>
+              <Link href="/stats" className="text-muted hover:text-text">
+                Stats
+              </Link>
             </nav>
           </div>
 

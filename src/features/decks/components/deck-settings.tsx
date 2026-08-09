@@ -20,15 +20,18 @@ import {
   type Visibility,
 } from "@/features/decks/types";
 import type { Folder } from "@/features/folders/queries";
+import { SharePanel } from "@/features/sharing/components/share-panel";
 
 const VISIBILITIES: Visibility[] = ["private", "unlisted", "public"];
 
 export function DeckSettings({
   deck,
   folders,
+  shareToken,
 }: {
   deck: Deck;
   folders: Folder[];
+  shareToken: string | null;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -52,6 +55,10 @@ export function DeckSettings({
               <FolderSection deck={deck} folders={folders} />
             </>
           ) : null}
+
+          <hr className="border-border" />
+
+          <SharePanel deckId={deck.id} existingToken={shareToken} />
 
           <hr className="border-border" />
 

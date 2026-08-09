@@ -17,6 +17,7 @@ import { VISIBILITY_LABELS } from "@/features/decks/types";
 import { listFolders } from "@/features/folders/queries";
 import { EnrollToggle } from "@/features/srs/components/enroll-toggle";
 import { isEnrolled } from "@/features/srs/queries";
+import { getShareToken } from "@/features/sharing/queries";
 
 export async function generateMetadata({
   params,
@@ -40,11 +41,12 @@ export default async function DeckPage({ params }: PageProps<"/decks/[id]">) {
   const isOwner = deck.user_id === user.id;
   const aiAvailable = isGroqConfigured();
 
-  const [cards, folders, enrolled, quota] = await Promise.all([
+  const [cards, folders, enrolled, quota, shareToken] = await Promise.all([
     listCards(deck.id),
     isOwner ? listFolders(user.id) : Promise.resolve([]),
     isEnrolled(user.id, deck.id),
     aiAvailable ? getQuotaRemaining() : Promise.resolve(null),
+    isOwner ? getShareToken(deck.id) : Promise.resolve(null),
   ]);
 
   const categories = deriveCategories(cards);
@@ -89,7 +91,13 @@ export default async function DeckPage({ params }: PageProps<"/decks/[id]">) {
             </div>
           </div>
 
-          {isOwner ? <DeckSettings deck={deck} folders={folders} /> : null}
+          {isOwner ? (
+            <DeckSettings
+              deck={deck}
+              folders={folders}
+              shareToken={shareToken}
+            />
+          ) : null}
         </div>
 
         {cards.length > 0 ? (

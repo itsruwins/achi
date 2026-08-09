@@ -48,13 +48,22 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               <Link href="/stats" className="text-muted hover:text-text">
                 Stats
               </Link>
+              <Link
+                href="/community"
+                className="hidden text-muted hover:text-text sm:inline"
+              >
+                Community
+              </Link>
             </nav>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted sm:inline">
+            <Link
+              href={`/u/${profile.username}`}
+              className="hidden text-sm text-muted hover:text-text sm:inline"
+            >
               @{profile.username}
-            </span>
+            </Link>
             <SignOutButton />
           </div>
         </div>

@@ -40,6 +40,53 @@ export async function consumeQuota(kind: QuotaKind): Promise<QuotaResult> {
   return { allowed: true, remaining };
 }
 
+/**
+ * Hand back an allowance for a request that never reached the model.
+ *
+ * Only for pre-generation failures — a rejected request, a dropped connection.
+ * A model that ran and returned something disappointing is not refunded: those
+ * tokens were genuinely spent, and refunding them would make "regenerate until
+ * it looks right" free.
+ */
+export async function refundQuota(kind: QuotaKind): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("refund_ai_quota", { quota_kind: kind });
+
+  // Non-fatal: the user is already getting an error for the real failure, and
+  // one uncredited generation is not worth turning that into a second one.
+  if (error) console.error("[ai] refund_ai_quota failed:", error.message);
+}
+
+/**
+ * Did the model fail to produce JSON matching the schema?
+ *
+ * Groq returns 400 `json_validate_failed` when constrained decoding could not
+ * complete — almost always because `max_completion_tokens` ran out partway
+ * through. `failed_generation` comes back empty, so there is nothing to recover.
+ */
+export function isJsonValidationFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { error?: { error?: { code?: string } } }).error?.error?.code;
+  return code === "json_validate_failed";
+}
+
+/**
+ * Did this request fail because Groq's per-minute token budget was exhausted?
+ *
+ * Groq signals it as 429, or as 413 with `rate_limit_exceeded` when the
+ * *reserved* output alone exceeds the budget — checking the status code on its
+ * own misses the second case.
+ */
+export function isRateLimited(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const status = (error as { status?: number }).status;
+  if (status === 429) return true;
+
+  const code = (error as { error?: { error?: { code?: string } } }).error?.error?.code;
+  return code === "rate_limit_exceeded";
+}
+
 export async function getQuotaRemaining(): Promise<{
   generations: number;
   tutor: number;

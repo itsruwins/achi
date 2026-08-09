@@ -9,7 +9,7 @@ import {
   TUTOR_HISTORY_TURNS,
 } from "@/features/ai/limits";
 import { tutorSystem, wrapUntrusted } from "@/features/ai/prompts";
-import { consumeQuota } from "@/features/ai/quota";
+import { consumeQuota, isRateLimited, refundQuota } from "@/features/ai/quota";
 import { getGroq, isGroqConfigured, MODEL } from "@/lib/groq/client";
 import { getDeck } from "@/features/decks/queries";
 import { listCards } from "@/features/cards/queries";
@@ -131,9 +131,22 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    // The stream never opened, so nothing was generated — refund.
+    if (isRateLimited(error)) {
+      await refundQuota("tutor");
+      return NextResponse.json(
+        {
+          error:
+            "The AI service is at its per-minute limit. Give it a minute — this message wasn't counted.",
+        },
+        { status: 429 },
+      );
+    }
+
     console.error("[ai] tutor failed:", error);
+    await refundQuota("tutor");
     return NextResponse.json(
-      { error: "The tutor is unavailable right now." },
+      { error: "The tutor is unavailable right now. This message wasn't counted." },
       { status: 502 },
     );
   }

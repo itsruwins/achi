@@ -21,17 +21,53 @@ export const DAILY_GENERATION_LIMIT = 20;
 export const DAILY_TUTOR_LIMIT = 100;
 
 /** Card counts offered in the generator. */
-export const CARD_COUNT_OPTIONS = [10, 20, 30, 50] as const;
-export const DEFAULT_CARD_COUNT = 20;
+export const CARD_COUNT_OPTIONS = [10, 15, 20, 30] as const;
+export const DEFAULT_CARD_COUNT = 15;
 
 /**
- * Caps on what we'll send upstream.
+ * Groq's per-minute token budget for this model on the free tier.
  *
- * Input length is the main driver of generation cost, and an unbounded paste —
- * someone dropping a whole textbook in — is both expensive and worse at the
- * task than a focused excerpt.
+ * Measured from the `x-ratelimit-limit-tokens` response header, not guessed.
+ * The number that matters: **`max_completion_tokens` counts against this**, so a
+ * request reserving 16k output tokens is rejected outright even when the prompt
+ * is tiny. Everything below is sized to keep prompt + reserved output under it.
+ *
+ * It is a limit on the *key*, shared by every user of this deployment, so two
+ * people generating in the same minute can collide. Both routes detect that and
+ * refund the caller's daily allowance rather than charging for a failure.
  */
-export const MAX_SOURCE_CHARS = 24_000;
+export const GROQ_TPM_BUDGET = 8_000;
+
+/**
+ * Tokens to reserve for the answer, sized to the number of cards requested.
+ *
+ * `max_completion_tokens` caps reasoning AND visible output together. Running
+ * out mid-answer does not return a truncated deck — Groq rejects the whole
+ * request with `json_validate_failed` and an empty `failed_generation`, because
+ * what the model produced never became valid JSON. So this has to be generous:
+ * an undersized budget is a hard failure, an oversized one only costs headroom.
+ *
+ * Measured on the real model: 15 cards from ~2.5k characters runs about 950
+ * completion tokens at `low` effort. 150/card plus 800 leaves roughly double
+ * that, which covers a source dense enough to produce long answers.
+ *
+ * Worst case against the 8k budget: 30 cards reserves 4,500, the system prompt
+ * and schema run to roughly 800, and MAX_SOURCE_CHARS caps input near 2,500 —
+ * about 7,800.
+ */
+export function outputTokenBudget(cardCount: number): number {
+  return Math.min(4_500, Math.max(1_500, cardCount * 150 + 800));
+}
+
+/**
+ * Cap on submitted text.
+ *
+ * ~10k characters is roughly 2.5k tokens, which leaves room for the largest
+ * card count inside the per-minute budget. It is also about a dense chapter —
+ * beyond that the model does worse anyway, because the material stops being
+ * focused.
+ */
+export const MAX_SOURCE_CHARS = 10_000;
 export const MAX_TUTOR_MESSAGE_CHARS = 500;
 
 /** How many cards of deck context the tutor is given. */

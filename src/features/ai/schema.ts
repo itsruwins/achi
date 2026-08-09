@@ -19,7 +19,7 @@ export const GeneratedCardSchema = z.object({
   back: z
     .string()
     .describe(
-      "The answer side. As short as it can be while still being correct — a phrase or a sentence, not a paragraph.",
+      "The answer side, in the source material's own words wherever the source states it. As short as it can be while still being correct — a phrase or a sentence, not a paragraph.",
     ),
   category: z
     .string()
@@ -50,7 +50,11 @@ export type GeneratedCard = z.infer<typeof GeneratedCardSchema>;
 
 /** What the client sends to /api/generate. */
 export const GenerateRequestSchema = z.object({
-  mode: z.enum(["topic", "notes"]),
+  mode: z.enum(["topic", "notes", "document"]),
   source: z.string().min(3).max(24_000),
   cardCount: z.number().int().min(5).max(50),
+  // Defaults to verbatim: when someone supplies their own material, matching
+  // its wording is almost always what they want — they're being examined on it.
+  fidelity: z.enum(["verbatim", "adapted"]).default("verbatim"),
+  filename: z.string().max(255).optional(),
 });

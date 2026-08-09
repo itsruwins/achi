@@ -13,12 +13,23 @@ import {
 import type { GeneratedDeck } from "@/features/ai/schema";
 import { cn } from "@/lib/utils/cn";
 
-type Mode = "topic" | "notes";
+import { FileDrop, type ExtractedFile } from "./file-drop";
+
+type Mode = "topic" | "notes" | "document";
+type Fidelity = "verbatim" | "adapted";
+
+const MODE_LABELS: Record<Mode, string> = {
+  document: "Upload a file",
+  notes: "Paste notes",
+  topic: "Just a topic",
+};
 
 export function GeneratePanel({ remaining }: { remaining: number }) {
-  const [mode, setMode] = useState<Mode>("notes");
+  const [mode, setMode] = useState<Mode>("document");
   const [source, setSource] = useState("");
   const [cardCount, setCardCount] = useState<number>(DEFAULT_CARD_COUNT);
+  const [fidelity, setFidelity] = useState<Fidelity>("verbatim");
+  const [upload, setUpload] = useState<ExtractedFile | null>(null);
 
   const [deck, setDeck] = useState<GeneratedDeck | null>(null);
   const [dropped, setDropped] = useState<Set<number>>(new Set());
@@ -37,7 +48,13 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, source: source.trim(), cardCount }),
+        body: JSON.stringify({
+          mode,
+          source: source.trim(),
+          cardCount,
+          fidelity,
+          filename: upload?.filename,
+        }),
       });
 
       const payload = await response.json();
@@ -160,11 +177,19 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex gap-1 rounded-control border border-border p-1">
-          {(["notes", "topic"] as const).map((value) => (
+          {(["document", "notes", "topic"] as const).map((value) => (
             <button
               key={value}
               type="button"
-              onClick={() => setMode(value)}
+              onClick={() => {
+                setMode(value);
+                setError(null);
+                // A topic has no source document to quote, so verbatim is
+                // meaningless there — fall back rather than silently sending a
+                // setting that can't apply.
+                if (value === "topic") setFidelity("adapted");
+                else setFidelity("verbatim");
+              }}
               className={cn(
                 "rounded-[7px] px-3 py-1.5 text-sm transition-colors",
                 mode === value
@@ -172,7 +197,7 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                   : "text-muted hover:text-text",
               )}
             >
-              {value === "notes" ? "Paste notes" : "Just a topic"}
+              {MODE_LABELS[value]}
             </button>
           ))}
         </div>
@@ -191,27 +216,125 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
         </p>
       ) : null}
 
-      <Field
-        label={mode === "notes" ? "Your notes" : "Topic"}
-        htmlFor="source"
-        hint={
-          mode === "notes"
-            ? `Paste lecture notes, a summary, a chapter. Up to ${MAX_SOURCE_CHARS.toLocaleString()} characters.`
-            : "e.g. 'The Krebs cycle' or 'Philippine constitutional law — bill of rights'"
-        }
-      >
-        <Textarea
-          id="source"
-          value={source}
-          onChange={(event) => setSource(event.target.value.slice(0, MAX_SOURCE_CHARS))}
-          rows={mode === "notes" ? 10 : 2}
-          placeholder={
-            mode === "notes"
-              ? "Paste what you're studying…"
-              : "What should the deck cover?"
-          }
+      {mode === "document" && !upload ? (
+        <FileDrop
+          disabled={outOfQuota}
+          onExtracted={(file) => {
+            setUpload(file);
+            setSource(file.text);
+          }}
         />
-      </Field>
+      ) : null}
+
+      {mode === "document" && upload ? (
+        <div className="rounded-card border border-border bg-surface p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-medium text-text">{upload.filename}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setUpload(null);
+                setSource("");
+              }}
+              className="text-xs text-muted underline hover:text-text"
+            >
+              Use a different file
+            </button>
+          </div>
+          <p className="mt-0.5 text-xs text-subtle">
+            {upload.pages ? `${upload.pages} pages · ` : ""}
+            {source.length.toLocaleString()} characters
+            {upload.truncated ? " · trimmed to fit" : ""}
+          </p>
+          {upload.truncated ? (
+            <p className="mt-2 rounded-control border border-warning bg-warning-subtle px-3 py-2 text-xs text-text">
+              This file was longer than the limit, so only the first part is
+              being used. For the rest, upload the later sections separately.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {mode !== "document" || upload ? (
+        <Field
+          label={
+            mode === "topic"
+              ? "Topic"
+              : mode === "document"
+                ? "Text from your file"
+                : "Your notes"
+          }
+          htmlFor="source"
+          hint={
+            mode === "topic"
+              ? "e.g. 'The Krebs cycle' or 'Philippine constitutional law — bill of rights'"
+              : mode === "document"
+                ? "Check what was read out of the file, and delete anything you don't want cards from — headers, page numbers, references."
+                : `Paste lecture notes, a summary, a chapter. Up to ${MAX_SOURCE_CHARS.toLocaleString()} characters.`
+          }
+        >
+          <Textarea
+            id="source"
+            value={source}
+            onChange={(event) => setSource(event.target.value.slice(0, MAX_SOURCE_CHARS))}
+            rows={mode === "topic" ? 2 : 10}
+            placeholder={
+              mode === "topic"
+                ? "What should the deck cover?"
+                : "Paste what you're studying…"
+            }
+          />
+        </Field>
+      ) : null}
+
+      {mode !== "topic" ? (
+        <fieldset className="rounded-card border border-border bg-surface p-4">
+          <legend className="px-1 text-sm font-medium text-text">Wording</legend>
+          <div className="mt-2 space-y-1.5">
+            {(
+              [
+                {
+                  value: "verbatim" as const,
+                  label: "Use the source's exact words",
+                  note: "Answers are copied from your material, not reworded. Best when you'll be marked on its definitions.",
+                },
+                {
+                  value: "adapted" as const,
+                  label: "Let it rephrase for clarity",
+                  note: "Keeps the technical terms but may simplify the phrasing.",
+                },
+              ]
+            ).map((option) => (
+              <label
+                key={option.value}
+                className={cn(
+                  "flex cursor-pointer gap-2.5 rounded-control border px-3 py-2 transition-colors",
+                  fidelity === option.value
+                    ? "border-primary bg-primary-subtle"
+                    : "border-border hover:border-border-strong",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="fidelity"
+                  value={option.value}
+                  checked={fidelity === option.value}
+                  onChange={() => setFidelity(option.value)}
+                  className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm text-text">{option.label}</span>
+                  <span className="block text-xs text-muted">{option.note}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 px-1 text-xs text-subtle">
+            Questions are always written fresh — your material states facts, it
+            doesn&rsquo;t ask them. Exact wording applies to the answers.
+          </p>
+        </fieldset>
+      ) : null}
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>

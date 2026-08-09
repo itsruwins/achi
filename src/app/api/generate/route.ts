@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/features/auth/queries";
-import { DAILY_GENERATION_LIMIT } from "@/features/ai/limits";
+import { DAILY_GENERATION_LIMIT, outputTokenBudget } from "@/features/ai/limits";
 import { toGroqSchema } from "@/features/ai/json-schema";
-import { generationPrompt, GENERATION_SYSTEM } from "@/features/ai/prompts";
-import { consumeQuota } from "@/features/ai/quota";
+import { generationPrompt, generationSystem } from "@/features/ai/prompts";
+import {
+  consumeQuota,
+  isJsonValidationFailure,
+  isRateLimited,
+  refundQuota,
+} from "@/features/ai/quota";
 import { GeneratedDeckSchema, GenerateRequestSchema } from "@/features/ai/schema";
 import { getGroq, isGroqConfigured, MODEL } from "@/lib/groq/client";
 import { createClient } from "@/lib/supabase/server";
@@ -36,7 +41,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { mode, source, cardCount } = parsedBody.data;
+  const { mode, source, cardCount, fidelity, filename } = parsedBody.data;
 
   // Charged up front. Charging on success would let anyone burn tokens for free
   // by cancelling requests before they complete.
@@ -55,7 +60,10 @@ export async function POST(request: Request) {
   try {
     const completion = await getGroq().chat.completions.create({
       model: MODEL,
-      max_completion_tokens: 16_000,
+      // Sized to the card count, not a flat maximum: reserved output tokens
+      // count against Groq's per-minute budget, so a fixed 16k reservation is
+      // rejected before the prompt is even considered.
+      max_completion_tokens: outputTokenBudget(cardCount),
       // Strict mode uses constrained decoding, so the response is schema-valid
       // by construction — there is no JSON parse that can fail on a stray
       // markdown fence or a trailing comma.
@@ -67,15 +75,24 @@ export async function POST(request: Request) {
           schema: toGroqSchema(GeneratedDeckSchema),
         },
       },
-      // Writing flashcards from source material is extraction, not hard
-      // reasoning; "medium" mostly buys latency here. `hidden` keeps the
-      // model's reasoning out of `content`, which would otherwise break the
-      // JSON that constrained decoding just guaranteed.
-      reasoning_effort: "medium",
+      // "low", not "medium": measured on this model, medium spends ~40% more
+      // completion tokens for the same number of cards, and those tokens come
+      // out of the same budget the JSON needs. Not "none" either — that is
+      // rejected outright when a response_format schema is attached.
+      // `hidden` keeps reasoning out of `content`, which would otherwise break
+      // the JSON that constrained decoding just guaranteed.
+      reasoning_effort: "low",
+      // Verbatim quoting is a copying task, and sampling is what makes a model
+      // drift into paraphrase. Near-zero temperature is the single biggest
+      // lever on whether the source's exact wording survives.
+      temperature: fidelity === "verbatim" ? 0.1 : 0.6,
       reasoning_format: "hidden",
       messages: [
-        { role: "system", content: GENERATION_SYSTEM },
-        { role: "user", content: generationPrompt(mode, source, cardCount) },
+        { role: "system", content: generationSystem(fidelity) },
+        {
+          role: "user",
+          content: generationPrompt(mode, source, cardCount, fidelity, filename),
+        },
       ],
     });
 
@@ -122,11 +139,42 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ deck: parsed.data, remaining: quota.remaining });
   } catch (error) {
+    // The model ran out of budget before producing valid JSON. Groq rejects the
+    // whole request rather than returning a partial deck, so there is nothing
+    // to salvage — but the user got nothing, so they keep their allowance.
+    if (isJsonValidationFailure(error)) {
+      await refundQuota("generation");
+      await logGeneration(supabase, user.id, mode, source.length, 0, "json_invalid");
+
+      return NextResponse.json(
+        {
+          error:
+            "The deck came back incomplete — usually too much material for the number of cards. Try fewer cards or a shorter excerpt. This didn't use up a generation.",
+        },
+        { status: 422 },
+      );
+    }
+
+    // Nothing was generated, so the allowance goes back.
+    if (isRateLimited(error)) {
+      await refundQuota("generation");
+      await logGeneration(supabase, user.id, mode, source.length, 0, "rate_limited");
+
+      return NextResponse.json(
+        {
+          error:
+            "The AI service is at its per-minute limit. Wait about a minute and try again — this didn't use up a generation.",
+        },
+        { status: 429 },
+      );
+    }
+
     console.error("[ai] generation failed:", error);
+    await refundQuota("generation");
     await logGeneration(supabase, user.id, mode, source.length, 0, "error");
 
     return NextResponse.json(
-      { error: "Generation failed. Try again in a moment." },
+      { error: "Generation failed. Try again in a moment — this didn't use up a generation." },
       { status: 502 },
     );
   }

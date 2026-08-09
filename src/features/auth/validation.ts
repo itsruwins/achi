@@ -2,7 +2,7 @@
  * Input validation for the auth forms.
  *
  * Hand-rolled rather than pulling in a schema library for four fields. When
- * Phase 6 needs zod for Claude's structured outputs, this is a candidate to
+ * Phase 6 needs zod for the AI schemas, this is a candidate to
  * fold in — until then it isn't worth the dependency.
  *
  * These rules mirror the CHECK constraints in 0001_auth.sql. The database is

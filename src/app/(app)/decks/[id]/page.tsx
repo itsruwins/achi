@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { requireOnboardedUser } from "@/features/auth/queries";
+import { TutorPanel } from "@/features/ai/components/tutor-panel";
+import { getQuotaRemaining } from "@/features/ai/quota";
+import { isGroqConfigured } from "@/lib/groq/client";
 import { CardEditor } from "@/features/cards/components/card-editor";
 import { CardList } from "@/features/cards/components/card-list";
 import { listCards } from "@/features/cards/queries";
@@ -35,10 +38,13 @@ export default async function DeckPage({ params }: PageProps<"/decks/[id]">) {
   if (!deck) notFound();
 
   const isOwner = deck.user_id === user.id;
-  const [cards, folders, enrolled] = await Promise.all([
+  const aiAvailable = isGroqConfigured();
+
+  const [cards, folders, enrolled, quota] = await Promise.all([
     listCards(deck.id),
     isOwner ? listFolders(user.id) : Promise.resolve([]),
     isEnrolled(user.id, deck.id),
+    aiAvailable ? getQuotaRemaining() : Promise.resolve(null),
   ]);
 
   const categories = deriveCategories(cards);
@@ -103,6 +109,10 @@ export default async function DeckPage({ params }: PageProps<"/decks/[id]">) {
           </div>
         ) : null}
       </div>
+
+      {aiAvailable && quota && cards.length > 0 ? (
+        <TutorPanel deckId={deck.id} remaining={quota.tutor} />
+      ) : null}
 
       {isOwner ? (
         <section>

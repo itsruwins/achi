@@ -55,6 +55,28 @@ export function DeckSettings({
 
           <hr className="border-border" />
 
+          <div>
+            <p className="text-sm font-medium text-text">Export</p>
+            <p className="mt-0.5 text-xs text-muted">
+              JSON keeps everything and imports back into Achi. CSV opens in a
+              spreadsheet.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <a href={`/api/decks/${deck.id}/export?format=json`} download>
+                <Button variant="secondary" size="sm">
+                  Download JSON
+                </Button>
+              </a>
+              <a href={`/api/decks/${deck.id}/export?format=csv`} download>
+                <Button variant="secondary" size="sm">
+                  Download CSV
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          <hr className="border-border" />
+
           <div className="flex flex-wrap items-center gap-2">
             <form action={togglePin}>
               <input type="hidden" name="deckId" value={deck.id} />

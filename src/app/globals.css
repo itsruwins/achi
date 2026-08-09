@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Tailwind v4 is CSS-first — there is no tailwind.config.ts. Raw values live on
+   :root, and the @theme inline block below maps them into Tailwind utilities
+   (bg-surface, text-muted, rounded-card, …).
+
+   Theming has three states: an explicit choice stamps data-theme on <html>,
+   and the default "system" setting falls through to prefers-color-scheme.
+   Every token gets its light value on bare :root so nothing is defined only
+   inside a media query.
+--------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces — warm paper rather than clinical white */
+  --bg: #fbf9f5;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --overlay: rgb(28 25 23 / 0.45);
+
+  /* Text */
+  --text: #1c1917;
+  --text-muted: #57534e;
+  --text-subtle: #8b857f;
+
+  /* Lines */
+  --border: #e8e2d9;
+  --border-strong: #d6cec2;
+
+  /* Brand — jade */
+  --primary: #0f7a63;
+  --primary-hover: #0c6552;
+  --primary-fg: #ffffff;
+  --primary-subtle: #e3f2ed;
+
+  /* Accent — warm amber, for streaks and highlights */
+  --accent: #c2740c;
+  --accent-subtle: #fbf0dc;
+
+  /* Semantic — also used by the four SRS rating buttons */
+  --success: #2f7d55;
+  --success-subtle: #e4f2ea;
+  --warning: #b0730a;
+  --warning-subtle: #fbf0dc;
+  --danger: #b4402f;
+  --danger-subtle: #fbe9e6;
+  --info: #2b6cb0;
+  --info-subtle: #e6eff8;
+
+  --focus: var(--primary);
+
+  /* Radii */
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-modal: 1.25rem;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.04), 0 2px 8px rgb(28 25 23 / 0.04);
+  --shadow-raised: 0 2px 4px rgb(28 25 23 / 0.05), 0 8px 24px rgb(28 25 23 / 0.08);
+  --shadow-modal: 0 8px 12px rgb(28 25 23 / 0.08), 0 24px 48px rgb(28 25 23 / 0.14);
+}
+
+/* Dark: system preference, unless an explicit light choice overrides it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #14120f;
+    --surface: #1e1b17;
+    --surface-raised: #262119;
+    --overlay: rgb(0 0 0 / 0.6);
+
+    --text: #f5f1ea;
+    --text-muted: #b8b0a5;
+    --text-subtle: #8a8177;
+
+    --border: #322c25;
+    --border-strong: #453d33;
+
+    --primary: #3fb795;
+    --primary-hover: #55c9a8;
+    --primary-fg: #07231c;
+    --primary-subtle: #10312a;
+
+    --accent: #e0a341;
+    --accent-subtle: #33270f;
+
+    --success: #4fb37f;
+    --success-subtle: #12291d;
+    --warning: #d9a03f;
+    --warning-subtle: #2e2410;
+    --danger: #e0705c;
+    --danger-subtle: #331a16;
+    --info: #6fa8dc;
+    --info-subtle: #14212e;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
+    --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-modal: 0 8px 12px rgb(0 0 0 / 0.4), 0 24px 48px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* Dark: explicit choice wins in both directions. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #14120f;
+  --surface: #1e1b17;
+  --surface-raised: #262119;
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --text: #f5f1ea;
+  --text-muted: #b8b0a5;
+  --text-subtle: #8a8177;
+
+  --border: #322c25;
+  --border-strong: #453d33;
+
+  --primary: #3fb795;
+  --primary-hover: #55c9a8;
+  --primary-fg: #07231c;
+  --primary-subtle: #10312a;
+
+  --accent: #e0a341;
+  --accent-subtle: #33270f;
+
+  --success: #4fb37f;
+  --success-subtle: #12291d;
+  --warning: #d9a03f;
+  --warning-subtle: #2e2410;
+  --danger: #e0705c;
+  --danger-subtle: #331a16;
+  --info: #6fa8dc;
+  --info-subtle: #14212e;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
+  --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-modal: 0 8px 12px rgb(0 0 0 / 0.4), 0 24px 48px rgb(0 0 0 / 0.5);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-overlay: var(--overlay);
+
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-subtle: var(--primary-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-subtle: var(--accent-subtle);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-modal: var(--radius-modal);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-modal: var(--shadow-modal);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* A single visible focus treatment, so keyboard users aren't guessing. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

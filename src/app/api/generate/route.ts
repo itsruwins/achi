@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/features/auth/queries";
-import { DAILY_GENERATION_LIMIT, outputTokenBudget } from "@/features/ai/limits";
+import {
+  DAILY_GENERATION_LIMIT,
+  maxSourceChars,
+  outputTokenBudget,
+} from "@/features/ai/limits";
 import { toGroqSchema } from "@/features/ai/json-schema";
 import { generationPrompt, generationSystem } from "@/features/ai/prompts";
 import {
@@ -42,6 +46,19 @@ export async function POST(request: Request) {
   }
 
   const { mode, source, cardCount, fidelity, filename } = parsedBody.data;
+
+  // Enforced here, not just in the browser: input and reserved output share one
+  // per-minute budget, so an oversized source is rejected by the provider with
+  // an opaque error rather than a useful one. Checked before spending quota.
+  const sourceLimit = maxSourceChars(cardCount);
+  if (source.length > sourceLimit) {
+    return NextResponse.json(
+      {
+        error: `That's ${source.length.toLocaleString()} characters. At ${cardCount} cards the limit is ${sourceLimit.toLocaleString()} — ask for fewer cards to fit more text, or split the document.`,
+      },
+      { status: 413 },
+    );
+  }
 
   // Charged up front. Charging on success would let anyone burn tokens for free
   // by cancelling requests before they complete.

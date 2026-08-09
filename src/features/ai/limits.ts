@@ -21,7 +21,7 @@ export const DAILY_GENERATION_LIMIT = 20;
 export const DAILY_TUTOR_LIMIT = 100;
 
 /** Card counts offered in the generator. */
-export const CARD_COUNT_OPTIONS = [10, 15, 20, 30] as const;
+export const CARD_COUNT_OPTIONS = [5, 10, 15, 20, 30] as const;
 export const DEFAULT_CARD_COUNT = 15;
 
 /**
@@ -59,15 +59,62 @@ export function outputTokenBudget(cardCount: number): number {
   return Math.min(4_500, Math.max(1_500, cardCount * 150 + 800));
 }
 
+/** Rough overhead of the system prompt, schema, and JSON scaffolding. */
+const PROMPT_OVERHEAD_TOKENS = 800;
+
+/** Headroom, because character-to-token is an estimate and not a promise. */
+const SAFETY_TOKENS = 500;
+
 /**
- * Cap on submitted text.
+ * Characters per token.
  *
- * ~10k characters is roughly 2.5k tokens, which leaves room for the largest
- * card count inside the per-minute budget. It is also about a dense chapter —
- * beyond that the model does worse anyway, because the material stops being
- * focused.
+ * Measured against this model, not assumed: clean English prose came out at
+ * 5.2 chars/token across 20k–40k character samples. Technical material —
+ * code, formulae, tables, heavy punctuation — tokenizes denser, closer to 3.5.
+ *
+ * 4.2 sits between the two. Erring low costs a little unused headroom; erring
+ * high means the provider rejects the request outright, so the asymmetry is
+ * deliberate. A dense document near the limit can still be refused, which the
+ * route handles by refunding the allowance and saying so.
  */
-export const MAX_SOURCE_CHARS = 10_000;
+const CHARS_PER_TOKEN = 4.2;
+
+/**
+ * How much source text fits alongside the requested number of cards.
+ *
+ * The per-minute budget is shared between input and reserved output, so this is
+ * a trade rather than a constant: ask for fewer cards and more of the document
+ * fits. A flat cap sized for the largest card count — which is what this was
+ * originally — needlessly limits the common case.
+ *
+ *    5 cards → ~21,600 characters
+ *   10 cards → ~18,500
+ *   15 cards → ~15,300
+ *   20 cards → ~12,200
+ *   30 cards →  ~9,200
+ *
+ * The hard ceiling is the whole per-minute budget: about 41,000 characters of
+ * clean prose with nothing reserved for output, which is not a usable request.
+ * Raising these for real means raising GROQ_TPM_BUDGET — a paid Groq tier. No
+ * prompt change gets around it.
+ */
+export function maxSourceChars(cardCount: number): number {
+  const available =
+    GROQ_TPM_BUDGET -
+    PROMPT_OVERHEAD_TOKENS -
+    SAFETY_TOKENS -
+    outputTokenBudget(cardCount);
+
+  return Math.max(3_000, Math.floor(available * CHARS_PER_TOKEN));
+}
+
+/**
+ * The largest source any card count allows — the cap used when extracting a
+ * document, before the user has chosen how many cards they want.
+ */
+export const MAX_SOURCE_CHARS = maxSourceChars(
+  Math.min(...CARD_COUNT_OPTIONS),
+);
 export const MAX_TUTOR_MESSAGE_CHARS = 500;
 
 /** How many cards of deck context the tutor is given. */

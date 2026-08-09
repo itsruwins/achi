@@ -8,12 +8,16 @@ import { saveGeneratedDeck } from "@/features/ai/actions";
 import {
   CARD_COUNT_OPTIONS,
   DEFAULT_CARD_COUNT,
-  MAX_SOURCE_CHARS,
+  maxSourceChars,
 } from "@/features/ai/limits";
-import type { GeneratedDeck } from "@/features/ai/schema";
+import { allocateCards, mergeCards, splitSource } from "@/features/ai/chunk";
+import type { GeneratedCard, GeneratedDeck } from "@/features/ai/schema";
 import { cn } from "@/lib/utils/cn";
 
 import { FileDrop, type ExtractedFile } from "./file-drop";
+
+/** Long enough for the per-minute token bucket to refill between passes. */
+const RATE_LIMIT_PAUSE_MS = 62_000;
 
 type Mode = "topic" | "notes" | "document";
 type Fidelity = "verbatim" | "adapted";
@@ -36,44 +40,97 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
   const [left, setLeft] = useState(remaining);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number;
+    waiting: boolean;
+  } | null>(null);
   const [saving, startSaving] = useTransition();
 
   const outOfQuota = left <= 0;
+  // The budget is shared between the text sent and the cards asked for, so the
+  // ceiling moves when the card count does.
+  const sourceLimit = maxSourceChars(cardCount);
+
+  // A document past the per-request ceiling is generated in passes. Each pass
+  // is its own short request — the alternative, one long server request, would
+  // sit past most platform timeouts.
+  const parts = splitSource(source.trim(), sourceLimit);
+  const needsChunking = parts.length > 1;
 
   async function generate() {
     setError(null);
     setGenerating(true);
+    setProgress(null);
+
+    const chunks = splitSource(source.trim(), sourceLimit);
+    const allocation = allocateCards(chunks, cardCount);
+    const collected: GeneratedCard[][] = [];
+    let title = "";
+    let description = "";
+    let remaining = left;
 
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode,
-          source: source.trim(),
-          cardCount,
-          fidelity,
-          filename: upload?.filename,
-        }),
-      });
+      for (let index = 0; index < chunks.length; index++) {
+        if (chunks.length > 1) {
+          setProgress({ done: index, total: chunks.length, waiting: false });
+        }
 
-      const payload = await response.json();
+        const response = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode,
+            source: chunks[index],
+            cardCount: allocation[index],
+            fidelity,
+            filename: upload?.filename,
+          }),
+        });
 
-      if (!response.ok) {
-        setError(payload.error ?? "Generation failed.");
-        // A 429 means the allowance is gone; reflect that immediately rather
-        // than letting the user press the button again for another rejection.
-        if (response.status === 429) setLeft(0);
-        return;
+        const payload = await response.json();
+
+        if (!response.ok) {
+          // Partial results are kept: several minutes of work should not be
+          // thrown away because the last pass hit a limit.
+          if (collected.length > 0) {
+            setError(
+              `${payload.error ?? "Generation failed."} Keeping the ${collected.flat().length} cards made so far.`,
+            );
+            break;
+          }
+          setError(payload.error ?? "Generation failed.");
+          if (response.status === 429) setLeft(0);
+          return;
+        }
+
+        collected.push(payload.deck.cards);
+        title ||= payload.deck.title;
+        description ||= payload.deck.description;
+        remaining = payload.remaining ?? remaining - 1;
+        setLeft(remaining);
+
+        // The token bucket refills over about a minute, and the next pass would
+        // otherwise be rejected outright. Skipped after the final pass.
+        if (index < chunks.length - 1) {
+          setProgress({ done: index + 1, total: chunks.length, waiting: true });
+          await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_PAUSE_MS));
+        }
       }
 
-      setDeck(payload.deck);
+      if (collected.length === 0) return;
+
+      setDeck({
+        title: title || "Generated deck",
+        description,
+        cards: mergeCards(collected),
+      });
       setDropped(new Set());
-      setLeft(payload.remaining ?? left - 1);
     } catch {
       setError("Couldn't reach the server. Check your connection.");
     } finally {
       setGenerating(false);
+      setProgress(null);
     }
   }
 
@@ -270,13 +327,13 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
               ? "e.g. 'The Krebs cycle' or 'Philippine constitutional law — bill of rights'"
               : mode === "document"
                 ? "Check what was read out of the file, and delete anything you don't want cards from — headers, page numbers, references."
-                : `Paste lecture notes, a summary, a chapter. Up to ${MAX_SOURCE_CHARS.toLocaleString()} characters.`
+                : "Paste lecture notes, a summary, a chapter." 
           }
         >
           <Textarea
             id="source"
             value={source}
-            onChange={(event) => setSource(event.target.value.slice(0, MAX_SOURCE_CHARS))}
+            onChange={(event) => setSource(event.target.value)}
             rows={mode === "topic" ? 2 : 10}
             placeholder={
               mode === "topic"
@@ -284,6 +341,12 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                 : "Paste what you're studying…"
             }
           />
+          <p className="text-xs text-subtle">
+            {source.length.toLocaleString()} characters
+            {needsChunking
+              ? ` — over the ${sourceLimit.toLocaleString()} per-pass limit, so this runs in ${parts.length} passes.`
+              : ` of ${sourceLimit.toLocaleString()} in one pass`}
+          </p>
         </Field>
       ) : null}
 
@@ -336,6 +399,53 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
         </fieldset>
       ) : null}
 
+      {needsChunking && !generating ? (
+        <div className="rounded-card border border-border bg-surface p-4">
+          <p className="text-sm font-medium text-text">
+            This is longer than one request allows
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            It&rsquo;ll be split into <strong>{parts.length} passes</strong> of
+            up to {sourceLimit.toLocaleString()} characters, then merged into
+            one deck with duplicate questions removed.
+          </p>
+          <ul className="mt-2 space-y-0.5 text-xs text-subtle">
+            <li>
+              Takes about {Math.ceil(((parts.length - 1) * 62 + parts.length * 4) / 60)}{" "}
+              minutes — the free API key needs a minute between passes.
+            </li>
+            <li>
+              Uses {parts.length} of your {left} remaining generations.
+            </li>
+            <li>Keep this tab open until it finishes.</li>
+          </ul>
+        </div>
+      ) : null}
+
+      {progress ? (
+        <div
+          role="status"
+          className="rounded-card border border-border bg-surface p-4"
+        >
+          <div className="flex items-baseline justify-between gap-2 text-sm">
+            <span className="text-text">
+              {progress.waiting
+                ? "Waiting for the rate limit to clear…"
+                : `Writing pass ${progress.done + 1} of ${progress.total}`}
+            </span>
+            <span className="tabular-nums text-subtle">
+              {progress.done}/{progress.total}
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${(progress.done / progress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <label htmlFor="cardCount" className="block text-sm font-medium text-text">
@@ -360,10 +470,16 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
           disabled={generating || outOfQuota || source.trim().length < 3}
         >
           {generating
-            ? "Writing cards…"
+            ? progress
+              ? progress.waiting
+                ? `Pass ${progress.done} of ${progress.total} — waiting…`
+                : `Writing pass ${progress.done + 1} of ${progress.total}…`
+              : "Writing cards…"
             : outOfQuota
               ? "No generations left today"
-              : "Generate deck"}
+              : needsChunking
+                ? `Generate in ${parts.length} passes`
+                : "Generate deck"}
         </Button>
       </div>
 

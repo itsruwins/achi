@@ -16,6 +16,8 @@ export type ExtractedDocument = {
   /** Present for PDFs; undefined for formats without a page concept. */
   pages?: number;
   truncated: boolean;
+  /** Character count before any truncation, so callers can report the loss. */
+  originalLength?: number;
 };
 
 export const SUPPORTED_EXTENSIONS = [
@@ -156,7 +158,9 @@ export async function extractDocument(
     );
   }
 
-  if (result.text.length > maxChars) {
+  const originalLength = result.text.length;
+
+  if (originalLength > maxChars) {
     // Cut on a paragraph boundary so the tail isn't a severed sentence the
     // model then tries to make a card out of.
     const clipped = result.text.slice(0, maxChars);
@@ -165,8 +169,9 @@ export async function extractDocument(
       ...result,
       text: lastBreak > maxChars * 0.5 ? clipped.slice(0, lastBreak) : clipped,
       truncated: true,
+      originalLength,
     };
   }
 
-  return result;
+  return { ...result, originalLength };
 }

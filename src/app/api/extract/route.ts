@@ -8,7 +8,7 @@ import {
   UnsupportedFileError,
   extractDocument,
 } from "@/features/ai/extract";
-import { MAX_SOURCE_CHARS } from "@/features/ai/limits";
+import { MAX_UPLOAD_CHARS } from "@/features/ai/limits";
 
 /**
  * Turn an uploaded document into plain text.
@@ -52,12 +52,15 @@ export async function POST(request: Request) {
 
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const result = await extractDocument(file.name, bytes, MAX_SOURCE_CHARS);
+    const result = await extractDocument(file.name, bytes, MAX_UPLOAD_CHARS);
 
     return NextResponse.json({
       text: result.text,
       pages: result.pages ?? null,
       truncated: result.truncated,
+      // The pre-truncation length, so the panel can say how much was dropped
+      // rather than just that something was.
+      originalLength: result.originalLength,
       filename: file.name,
     });
   } catch (error) {

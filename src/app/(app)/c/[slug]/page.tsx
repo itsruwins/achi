@@ -250,8 +250,8 @@ export default async function CommunityPage({
                         {deck.emoji ? `${deck.emoji} ` : ""}
                         {deck.title}
                       </p>
-                      <p className="tnum mt-1 text-sm text-subtle">
-                        {deck.card_count}{" "}
+                      <p className="mt-1 text-sm text-subtle">
+                        <span className="tnum">{deck.card_count}</span>{" "}
                         {deck.card_count === 1 ? "card" : "cards"}
                       </p>
                     </Link>

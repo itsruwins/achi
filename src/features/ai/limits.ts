@@ -109,12 +109,56 @@ export function maxSourceChars(cardCount: number): number {
 }
 
 /**
- * The largest source any card count allows — the cap used when extracting a
- * document, before the user has chosen how many cards they want.
+ * The largest source that fits in a *single* pass, at the most generous card
+ * count. Only meaningful as a default before the user picks a card count.
  */
 export const MAX_SOURCE_CHARS = maxSourceChars(
   Math.min(...CARD_COUNT_OPTIONS),
 );
+
+/**
+ * How much text is kept when reading an uploaded file.
+ *
+ * Deliberately *not* MAX_SOURCE_CHARS. That is the per-request ceiling, and
+ * chunking already works around it by splitting the source into several passes
+ * — so capping extraction at one pass' worth threw away material the generator
+ * was perfectly able to handle. It also made upload behave differently from
+ * paste, which had no ceiling at all.
+ *
+ * The real constraint is not the provider's per-request limit, it is time and
+ * the daily allowance: each pass needs RATE_LIMIT_PAUSE_MS between it and the
+ * next, and costs one generation. At ~15,300 characters per pass that puts
+ * 100,000 characters at roughly seven passes and seven minutes — a full lecture
+ * PDF or a chapter, finishing while you wait, using about a third of a day's
+ * allowance.
+ *
+ * Raising this is a one-line change, but read `estimatePasses` first: past
+ * about 300,000 characters a document needs more passes than a day's allowance
+ * has, and the run cannot finish.
+ */
+export const MAX_UPLOAD_CHARS = 100_000;
+
+/**
+ * What a document will cost before anything is spent.
+ *
+ * Returned up front so the generator can show the price — passes, minutes,
+ * generations — and let someone decide, rather than starting a twelve-minute
+ * job without warning or failing halfway through for want of allowance.
+ */
+export function estimateRun(
+  sourceLength: number,
+  cardCount: number,
+  pauseMs: number,
+): { passes: number; minutes: number } {
+  const perPass = maxSourceChars(cardCount);
+  const passes = Math.max(1, Math.ceil(sourceLength / perPass));
+
+  // Each pass is a request plus, between passes, a wait for the token bucket
+  // to refill. The last pass has no wait after it.
+  const seconds = passes * 5 + (passes - 1) * (pauseMs / 1000);
+
+  return { passes, minutes: Math.max(1, Math.round(seconds / 60)) };
+}
 export const MAX_TUTOR_MESSAGE_CHARS = 500;
 
 /** How many cards of deck context the tutor is given. */

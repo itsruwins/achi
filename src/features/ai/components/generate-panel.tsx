@@ -9,6 +9,8 @@ import { saveGeneratedDeck } from "@/features/ai/actions";
 import {
   CARD_COUNT_OPTIONS,
   DEFAULT_CARD_COUNT,
+  estimateRun,
+  MAX_UPLOAD_CHARS,
   maxSourceChars,
 } from "@/features/ai/limits";
 import { allocateCards, mergeCards, splitSource } from "@/features/ai/chunk";
@@ -58,6 +60,12 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
   // sit past most platform timeouts.
   const parts = splitSource(source.trim(), sourceLimit);
   const needsChunking = parts.length > 1;
+
+  // Priced before anything is spent, so a seven-minute job is a decision rather
+  // than a surprise — and so a run that cannot finish is refused up front
+  // instead of dying on pass five with the allowance already gone.
+  const estimate = estimateRun(source.trim().length, cardCount, RATE_LIMIT_PAUSE_MS);
+  const notEnoughQuota = estimate.passes > left;
 
   async function generate() {
     setError(null);
@@ -315,15 +323,30 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
               Use a different file
             </button>
           </div>
-          <p className="tnum mt-0.5 text-sm text-subtle">
-            {upload.pages ? `${upload.pages} pages · ` : ""}
-            {source.length.toLocaleString()} characters
-            {upload.truncated ? " · trimmed to fit" : ""}
+          <p className="mt-0.5 text-sm text-subtle">
+            {upload.pages ? (
+              <>
+                <span className="tnum">{upload.pages}</span> pages ·{" "}
+              </>
+            ) : null}
+            <span>{source.length.toLocaleString()}</span>{" "}
+            characters
+            {upload.truncated ? " · trimmed" : ""}
           </p>
           {upload.truncated ? (
             <p className="mt-2 rounded-control border border-warning/40 bg-warning-subtle px-3 py-2 text-sm text-text">
-              This file was longer than the limit, so only the first part is
-              being used. For the rest, upload the later sections separately.
+              This file holds{" "}
+              {upload.originalLength ? (
+                <strong className="tnum">
+                  {upload.originalLength.toLocaleString()}
+                </strong>
+              ) : (
+                "more"
+              )}{" "}
+              characters and Achi reads the first{" "}
+              <strong>{MAX_UPLOAD_CHARS.toLocaleString()}</strong>
+              . Anything past that is not included — split the file and upload
+              the later sections separately if you need them.
             </p>
           ) : null}
         </div>
@@ -358,11 +381,24 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                 : "Paste what you're studying…"
             }
           />
-          <p className="tnum text-sm text-subtle">
-            {source.length.toLocaleString()} characters
-            {needsChunking
-              ? ` — over the ${sourceLimit.toLocaleString()} per-pass limit, so this runs in ${parts.length} passes.`
-              : ` of ${sourceLimit.toLocaleString()} in one pass`}
+          <p className="text-sm text-subtle">
+            <span>{source.length.toLocaleString()}</span>{" "}
+            characters
+            {needsChunking ? (
+              <>
+                {" — over the "}
+                <span>{sourceLimit.toLocaleString()}</span>
+                {" per-pass limit, so this runs in "}
+                <span className="tnum">{parts.length}</span>
+                {parts.length === 1 ? " pass." : " passes."}
+              </>
+            ) : (
+              <>
+                {" of "}
+                <span>{sourceLimit.toLocaleString()}</span>
+                {" in one pass"}
+              </>
+            )}
           </p>
         </Field>
       ) : null}
@@ -427,25 +463,54 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
       ) : null}
 
       {needsChunking && !generating ? (
-        <div className="rounded-card border border-info/30 bg-info-subtle p-4">
-          <p className="text-base font-medium text-info">
-            This is longer than one request allows
+        <div
+          className={cn(
+            "rounded-card border p-4",
+            notEnoughQuota
+              ? "border-warning/40 bg-warning-subtle"
+              : "border-info/30 bg-info-subtle",
+          )}
+        >
+          <p
+            className={cn(
+              "text-base font-medium",
+              notEnoughQuota ? "text-warning" : "text-info",
+            )}
+          >
+            {notEnoughQuota
+              ? "Not enough generations left for this today"
+              : "What this will cost"}
           </p>
-          <p className="mt-1 text-base text-muted">
-            It&rsquo;ll be split into <strong>{parts.length} passes</strong> of
-            up to {sourceLimit.toLocaleString()} characters, then merged into
-            one deck with duplicate questions removed.
+
+          <dl className="mt-3 grid grid-cols-3 gap-3">
+            {[
+              [`${parts.length}`, parts.length === 1 ? "pass" : "passes"],
+              [`~${estimate.minutes}`, estimate.minutes === 1 ? "minute" : "minutes"],
+              [`${parts.length} of ${left}`, "generations"],
+            ].map(([figure, label]) => (
+              <div key={label}>
+                <dt className="tnum text-xl font-semibold text-text">{figure}</dt>
+                <dd className="text-sm text-subtle">{label}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <p className="mt-3 text-sm text-muted">
+            {notEnoughQuota ? (
+              <>
+                This document needs {parts.length} passes and you have {left}{" "}
+                left today. Shorten the text, ask for more cards per pass, or
+                come back tomorrow.
+              </>
+            ) : (
+              <>
+                Split into {parts.length} passes of up to{" "}
+                {sourceLimit.toLocaleString()} characters, then merged into one
+                deck with duplicate questions removed. The free API key needs a
+                minute between passes — keep this tab open until it finishes.
+              </>
+            )}
           </p>
-          <ul className="mt-2 space-y-0.5 text-sm text-subtle">
-            <li>
-              Takes about {Math.ceil(((parts.length - 1) * 62 + parts.length * 4) / 60)}{" "}
-              minutes — the free API key needs a minute between passes.
-            </li>
-            <li>
-              Uses {parts.length} of your {left} remaining generations.
-            </li>
-            <li>Keep this tab open until it finishes.</li>
-          </ul>
         </div>
       ) : null}
 
@@ -502,7 +567,12 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
           size="lg"
           onClick={generate}
           aria-busy={generating || undefined}
-          disabled={generating || outOfQuota || source.trim().length < 3}
+          disabled={
+            generating ||
+            outOfQuota ||
+            notEnoughQuota ||
+            source.trim().length < 3
+          }
         >
           {generating
             ? progress
@@ -512,9 +582,11 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
               : "Writing cards…"
             : outOfQuota
               ? "No generations left today"
-              : needsChunking
-                ? `Generate in ${parts.length} passes`
-                : "Generate deck"}
+              : notEnoughQuota
+                ? `Needs ${parts.length} generations, ${left} left`
+                : needsChunking
+                  ? `Generate in ${parts.length} passes`
+                  : "Generate deck"}
         </Button>
       </div>
 

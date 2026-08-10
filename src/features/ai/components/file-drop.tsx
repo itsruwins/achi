@@ -11,6 +11,8 @@ export type ExtractedFile = {
   text: string;
   pages: number | null;
   truncated: boolean;
+  /** Characters in the file before truncation, when it was truncated. */
+  originalLength?: number;
 };
 
 const ACCEPT = ".pdf,.docx,.pptx,.txt,.md";
@@ -48,6 +50,7 @@ export function FileDrop({
         text: payload.text,
         pages: payload.pages,
         truncated: payload.truncated,
+        originalLength: payload.originalLength,
       });
     } catch {
       setError("Upload failed. Check your connection.");

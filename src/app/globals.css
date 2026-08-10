@@ -579,8 +579,21 @@ p {
   color: var(--selection-fg);
 }
 
-/* Numeric UI — counts, timers, progress — uses tabular figures so values stop
-   shifting horizontally as they tick. */
+/*
+  Tabular figures, so values stop shifting horizontally as they tick.
+
+  Two rules, both learned the hard way in this typeface:
+
+  1. Put it on the number, never on a sentence containing one. Tabular spacing
+     applies to punctuation too, so a wrapped paragraph renders
+     "124,200 characters." as "124 , 200 characters ."
+  2. Skip it for numbers carrying a thousands separator inline in prose.
+     Schibsted Grotesk's tabular comma is much wider than its proportional one,
+     so "47,520" reads as "47 , 520" even when only the number is wrapped.
+
+  What it IS for: values that tick in place or align down a column — progress
+  counters, table figures, stat tiles, badge counts.
+*/
 .tnum {
   font-variant-numeric: tabular-nums;
 }

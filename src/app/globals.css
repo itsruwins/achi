@@ -82,6 +82,8 @@
   --disabled-opacity: 0.45;
   --focus-ring: var(--primary);
   --focus-halo: oklch(0.525 0.100 172 / 0.18);
+  --wash-near: oklch(0.885 0.062 172 / 0.7);
+  --wash-far: oklch(0.945 0.032 172 / 0.3);
   --selection: oklch(0.525 0.100 172 / 0.22);
   --selection-fg: oklch(0.18 0.030 180);
 
@@ -166,6 +168,10 @@
     --hover-wash: oklch(0.99 0 0 / 0.06);
     --active-wash: oklch(0.99 0 0 / 0.1);
     --focus-halo: oklch(0.735 0.115 172 / 0.25);
+  --wash-near: oklch(0.46 0.075 172 / 0.40);
+  --wash-far: oklch(0.30 0.045 172 / 0.18);
+    --wash-near: oklch(0.46 0.075 172 / 0.40);
+    --wash-far: oklch(0.30 0.045 172 / 0.18);
     --selection: oklch(0.735 0.115 172 / 0.3);
     --selection-fg: oklch(0.98 0.01 172);
     --skeleton-base: oklch(0.275 0.010 195);
@@ -221,6 +227,8 @@
   --hover-wash: oklch(0.99 0 0 / 0.06);
   --active-wash: oklch(0.99 0 0 / 0.1);
   --focus-halo: oklch(0.735 0.115 172 / 0.25);
+  --wash-near: oklch(0.46 0.075 172 / 0.40);
+  --wash-far: oklch(0.30 0.045 172 / 0.18);
   --selection: oklch(0.735 0.115 172 / 0.3);
   --selection-fg: oklch(0.98 0.01 172);
   --skeleton-base: oklch(0.275 0.010 195);
@@ -382,7 +390,60 @@
   --text-6xl--line-height: 1.0;
   --text-6xl--letter-spacing: -0.028em;
 
+  /* Poster sizes. Only the hero uses these, and only with two or three words
+     per line — at this scale leading goes under 1 and the lines nearly touch,
+     which is the whole effect. */
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 0.94;
+  --text-7xl--letter-spacing: -0.032em;
+
+  --text-8xl: 5.5rem;
+  --text-8xl--line-height: 0.9;
+  --text-8xl--letter-spacing: -0.035em;
+
   --ease-out-quart: var(--ease-out);
+}
+
+/*
+  Atmospheric wash behind the hero.
+
+  Sits under the content on its own layer so it can never pick up a stacking
+  context from the text. `pointer-events: none` because it covers the CTAs.
+*/
+.hero-wash {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-wash::before {
+  content: "";
+  position: absolute;
+  inset: -4rem 0 auto 0;
+  height: 42rem;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      70% 55% at 50% 0%,
+      var(--wash-near) 0%,
+      var(--wash-far) 55%,
+      transparent 100%
+    );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-wash::before {
+    animation: achi-fade-in var(--dur-slow) var(--ease-out);
+  }
+}
+
+@keyframes achi-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -549,6 +610,22 @@ p {
     "WONK" 0,
     "opsz" 40;
   font-weight: 600;
+}
+
+/*
+  Display italic. A separate class rather than the `italic` utility, because
+  that would synthesise a slant on whichever face is active; this points at the
+  real italic file loaded in layout.tsx.
+*/
+.font-display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-variation-settings:
+    "SOFT" 0,
+    "WONK" 0,
+    "opsz" 40;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* Below ~24px the display face needs a lower optical size to keep its strokes

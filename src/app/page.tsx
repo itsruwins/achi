@@ -119,23 +119,36 @@ function SiteHeader({ signedIn }: { signedIn: boolean }) {
 
 function Hero({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[1fr_minmax(0,27rem)] lg:gap-16 lg:py-24">
-      <div>
-        {/* Two beats, second one turning: forgetting is the thing everyone
-            accepts as inevitable, and the claim is that it's schedulable. */}
-        <h1 className="font-display text-5xl text-text sm:text-6xl">
-          Forget less.
-          <span className="block text-primary">On purpose.</span>
+    <section className="hero-wash overflow-hidden">
+      <div className="mx-auto w-full max-w-4xl px-5 pt-14 text-center sm:pt-20">
+        {/*
+          One masthead line, at the top of the page only. A small tracked mono
+          label above *every* section is scaffolding; a single one here is a
+          brand device, and it's the one place the mono face earns its keep
+          outside data labels.
+        */}
+        <p className="label-data">Achi · on recall</p>
+
+        {/*
+          The tagline carries the whole hero, so it gets poster scale and the
+          contrast is inside the sentence: the claim upright in ink, the turn in
+          the real italic and in jade. Two beats, not three — a recessive third
+          line would soften exactly the thing that makes it land.
+        */}
+        <h1 className="mt-6 text-6xl text-text sm:text-7xl lg:text-8xl">
+          <span className="font-display block">Forget less.</span>
+          <span className="font-display-italic block text-primary">
+            On purpose.
+          </span>
         </h1>
 
-        <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-muted">
+        <p className="mx-auto mt-7 max-w-[46ch] text-lg leading-relaxed text-muted sm:text-xl">
           Paste a chapter or upload a lecture deck and get flashcards back in
           seconds. Achi then schedules every card for the day you&rsquo;re about
-          to forget it — so revision costs ten minutes a day instead of a
-          weekend before the exam.
+          to forget it.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           {signedIn ? (
             <Link href="/decks">
               <Button size="lg">
@@ -160,12 +173,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           )}
         </div>
 
-        {/*
-          Trust markers as chips, not prose. Each one answers a question people
-          actually stall on before signing up, and every claim here is true of
-          the product as built — there is no billing code in it at all.
-        */}
-        <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
+        <ul className="mx-auto mt-5 flex max-w-md flex-col items-center gap-y-2 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-5">
           {[
             "Free — no card, no trial",
             "Your cards export any time",
@@ -182,7 +190,12 @@ function Hero({ signedIn }: { signedIn: boolean }) {
         </ul>
       </div>
 
-      <div className="flex justify-center lg:justify-end">
+      {/*
+        The live card sits below the fold line on most screens, cropped by the
+        section edge — enough of it shows to read as a real card and to say
+        there is more page below, without spending a screen on it.
+      */}
+      <div className="mx-auto mt-14 w-full max-w-lg px-5 pb-16 sm:mt-16 sm:pb-20">
         <DemoCard />
       </div>
     </section>
@@ -418,8 +431,11 @@ function ClosingBand({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="band-dark border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-5 py-20 text-center lg:py-24">
-        <h2 className="font-display mx-auto max-w-[18ch] text-3xl text-text sm:text-4xl">
-          Make your first deck in about a minute
+        <h2 className="mx-auto max-w-[18ch] text-3xl text-text sm:text-4xl">
+          <span className="font-display">Make your first deck </span>
+          <span className="font-display-italic text-primary">
+            in about a minute
+          </span>
         </h2>
         <p className="mx-auto mt-4 max-w-[52ch] text-lg leading-relaxed text-muted">
           Bring the notes you already have. You&rsquo;ll have cards before

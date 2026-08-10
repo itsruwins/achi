@@ -17,6 +17,9 @@ const display = Fraunces({
   variable: "--ff-display",
   subsets: ["latin"],
   weight: "variable",
+  // The true italic, not a synthesised slant — the hero sets one line in it and
+  // an obliqued serif at 80px is immediately obvious as fake.
+  style: ["normal", "italic"],
   axes: ["SOFT", "WONK", "opsz"],
   display: "swap",
 });

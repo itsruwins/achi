@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CheckIcon } from "@/components/ui/icons";
 import { createShareLink, revokeShareLinks } from "@/features/sharing/actions";
 
 export function SharePanel({
@@ -46,14 +47,14 @@ export function SharePanel({
 
   return (
     <div>
-      <p className="text-sm font-medium text-text">Share a link</p>
-      <p className="mt-0.5 text-xs text-muted">
+      <p className="text-base font-medium text-text">Share a link</p>
+      <p className="mt-0.5 text-sm text-muted">
         Anyone with the link can view this deck and save a copy — no account
         needed to look.
       </p>
 
       {error ? (
-        <p role="alert" className="mt-2 text-xs text-danger">
+        <p role="alert" className="mt-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -65,11 +66,18 @@ export function SharePanel({
             value={url}
             onFocus={(event) => event.target.select()}
             aria-label="Share link"
-            className="h-9 w-full rounded-control border border-border-strong bg-bg px-3 font-mono text-xs text-text"
+            className="h-9 w-full rounded-control border border-border-strong bg-sunken px-3 font-mono text-sm text-text"
           />
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="secondary" onClick={copy}>
-              {copied ? "Copied" : "Copy link"}
+              {copied ? (
+                <>
+                  <CheckIcon className="size-3.5 text-success" />
+                  Copied
+                </>
+              ) : (
+                "Copy link"
+              )}
             </Button>
             <form
               action={revokeShareLinks}
@@ -98,9 +106,9 @@ export function SharePanel({
           variant="secondary"
           className="mt-3"
           onClick={create}
-          disabled={pending}
+          loading={pending}
         >
-          {pending ? "Creating…" : "Create share link"}
+          Create share link
         </Button>
       )}
     </div>

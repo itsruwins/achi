@@ -35,7 +35,7 @@ export function NewCommunityForm() {
       {state.error ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {state.error}
         </p>
@@ -66,15 +66,16 @@ export function NewCommunityForm() {
       </Field>
 
       <fieldset>
-        <legend className="text-sm font-medium text-text">Who can join</legend>
+        <legend className="text-base font-medium text-text">Who can join</legend>
         <div className="mt-2 space-y-1.5">
           {POLICIES.map((option) => (
             <label
               key={option.value}
               className={cn(
-                "flex cursor-pointer gap-2.5 rounded-control border px-3 py-2 transition-colors",
+                "flex cursor-pointer gap-2.5 rounded-control border px-3 py-2",
+                "transition-[background-color,border-color] duration-[var(--dur-fast)]",
                 policy === option.value
-                  ? "border-primary bg-primary-subtle"
+                  ? "border-primary-border bg-primary-subtle"
                   : "border-border hover:border-border-strong",
               )}
             >
@@ -87,21 +88,28 @@ export function NewCommunityForm() {
                 className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
               />
               <span className="min-w-0">
-                <span className="block text-sm text-text">{option.label}</span>
-                <span className="block text-xs text-muted">{option.note}</span>
+                <span
+                  className={cn(
+                    "block text-base font-medium",
+                    policy === option.value ? "text-primary" : "text-text",
+                  )}
+                >
+                  {option.label}
+                </span>
+                <span className="block text-sm text-muted">{option.note}</span>
               </span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      <p className="text-xs text-subtle">
+      <p className="text-sm text-subtle">
         Posts and shared decks are visible to members only. Anyone can see the
         community&rsquo;s name and description so they can ask to join.
       </p>
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Creating…" : "Create community"}
+      <Button type="submit" loading={isPending}>
+        Create community
       </Button>
     </form>
   );

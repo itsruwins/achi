@@ -46,7 +46,7 @@ export function CardEditor({ deckId, userId, card, categories, onDone }: Props) 
       {state.formError ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {state.formError}
         </p>
@@ -138,8 +138,8 @@ export function CardEditor({ deckId, userId, card, categories, onDone }: Props) 
       </div>
 
       <div className="flex items-center gap-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : isEdit ? "Save changes" : "Add card"}
+        <Button type="submit" loading={isPending}>
+          {isEdit ? "Save changes" : "Add card"}
         </Button>
         {isEdit && onDone ? (
           <Button variant="ghost" onClick={onDone}>

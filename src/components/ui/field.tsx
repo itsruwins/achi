@@ -1,6 +1,7 @@
 import type {
   InputHTMLAttributes,
   ReactNode,
+  SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
 
@@ -11,6 +12,8 @@ type FieldProps = {
   htmlFor: string;
   error?: string;
   hint?: ReactNode;
+  /** Right-aligned next to the label — character counts, "optional", links. */
+  aside?: ReactNode;
   children: ReactNode;
 };
 
@@ -20,22 +23,32 @@ type FieldProps = {
  * The error is rendered in an aria-live region so it is announced when it
  * appears after a failed submit, not just when focus happens to land on it.
  */
-export function Field({ label, htmlFor, error, hint, children }: FieldProps) {
+export function Field({
+  label,
+  htmlFor,
+  error,
+  hint,
+  aside,
+  children,
+}: FieldProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-text">
-        {label}
-      </label>
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={htmlFor} className="block text-base font-medium text-text">
+          {label}
+        </label>
+        {aside ? <span className="text-sm text-subtle">{aside}</span> : null}
+      </div>
       {children}
       {hint && !error ? (
-        <p id={`${htmlFor}-hint`} className="text-xs text-subtle">
+        <p id={`${htmlFor}-hint`} className="text-sm text-subtle">
           {hint}
         </p>
       ) : null}
       <p
         id={`${htmlFor}-error`}
         aria-live="polite"
-        className={cn("text-xs text-danger", !error && "sr-only")}
+        className={cn("text-sm text-danger", !error && "sr-only")}
       >
         {error ?? ""}
       </p>
@@ -43,8 +56,20 @@ export function Field({ label, htmlFor, error, hint, children }: FieldProps) {
   );
 }
 
+/**
+ * Controls sit on `surface` with a strong border, and shift to a primary border
+ * on focus in addition to the global focus ring — the ring alone is easy to
+ * lose against a page of bordered boxes.
+ */
 const controlBase =
-  "w-full rounded-control border bg-surface px-3 text-sm text-text placeholder:text-subtle";
+  "w-full rounded-control border bg-surface px-3 text-base text-text " +
+  "placeholder:text-subtle " +
+  "transition-[border-color,background-color] duration-[var(--dur-fast)] " +
+  "focus:outline-none focus-visible:outline-none " +
+  "disabled:cursor-not-allowed disabled:bg-sunken disabled:opacity-[var(--disabled-opacity)]";
+
+const controlRing =
+  "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/25";
 
 export function Input({
   className,
@@ -56,8 +81,11 @@ export function Input({
       aria-invalid={invalid || undefined}
       className={cn(
         controlBase,
-        "h-11",
-        invalid ? "border-danger" : "border-border-strong",
+        controlRing,
+        "h-9.5",
+        invalid
+          ? "border-danger focus-visible:border-danger focus-visible:ring-danger/25"
+          : "border-border-strong",
         className,
       )}
       {...props}
@@ -77,11 +105,94 @@ export function Textarea({
       aria-invalid={invalid || undefined}
       className={cn(
         controlBase,
-        "resize-y py-2.5 leading-relaxed",
-        invalid ? "border-danger" : "border-border-strong",
+        controlRing,
+        "resize-y py-2 leading-relaxed",
+        invalid
+          ? "border-danger focus-visible:border-danger focus-visible:ring-danger/25"
+          : "border-border-strong",
         className,
       )}
       {...props}
     />
+  );
+}
+
+/**
+ * Native select with a drawn chevron.
+ *
+ * `appearance-none` removes the platform arrow so the control matches Input;
+ * the menu itself stays native, which is the right call on mobile.
+ */
+export function Select({
+  className,
+  invalid,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
+  return (
+    <div className="relative">
+      <select
+        aria-invalid={invalid || undefined}
+        className={cn(
+          controlBase,
+          controlRing,
+          "h-9.5 cursor-pointer appearance-none pr-9",
+          invalid ? "border-danger" : "border-border-strong",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * Checkbox or radio with its label, as one click target.
+ *
+ * Built on the native input with `accent-color` rather than a custom-drawn box,
+ * so keyboard behaviour, form participation, and forced-colors mode all keep
+ * working for free.
+ */
+export function Choice({
+  label,
+  hint,
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & {
+  label: ReactNode;
+  hint?: ReactNode;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-start gap-2.5 rounded-control border border-border bg-surface p-2.5",
+        "transition-[border-color,background-color] duration-[var(--dur-fast)]",
+        "hover:border-border-strong has-checked:border-primary-border has-checked:bg-primary-subtle",
+        className,
+      )}
+    >
+      <input
+        className="mt-0.5 size-4 shrink-0 cursor-pointer accent-[var(--primary)]"
+        {...props}
+      />
+      <span className="min-w-0">
+        <span className="block text-base text-text">{label}</span>
+        {hint ? <span className="block text-sm text-subtle">{hint}</span> : null}
+      </span>
+    </label>
   );
 }

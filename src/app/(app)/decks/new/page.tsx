@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PageHeader } from "@/components/ui/layout";
+import { ImportIcon, SparkIcon, StudyIcon } from "@/components/ui/icons";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { GeneratePanel } from "@/features/ai/components/generate-panel";
 import { getQuotaRemaining } from "@/features/ai/quota";
@@ -32,32 +34,52 @@ export default async function NewDeckPage({
   ]);
 
   return (
-    <div className={cn("mx-auto", mode === "manual" ? "max-w-lg" : "max-w-2xl")}>
-      <Link href="/decks" className="text-sm text-muted hover:text-text">
-        ← Back to decks
-      </Link>
-
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-text">
-        New deck
-      </h1>
+    <div className={cn("mx-auto", mode === "manual" ? "max-w-xl" : "max-w-2xl")}>
+      <PageHeader
+        title="New deck"
+        description="Three ways in. They all end up in the same place — a deck you can study."
+        backHref="/decks"
+        backLabel="Decks"
+      />
 
       {/* Tabs as links rather than client state: the choice lives in the URL,
           so it survives a refresh and can be linked to. */}
-      <div className="mt-4 flex gap-1 rounded-control border border-border p-1">
-        <Tab href="/decks/new" active={mode === "manual"}>
-          Write it myself
-        </Tab>
+      <div
+        role="tablist"
+        aria-label="How to create the deck"
+        className="grid gap-1.5 sm:grid-cols-3"
+      >
+        <Tab
+          href="/decks/new"
+          active={mode === "manual"}
+          icon={<StudyIcon className="size-4" />}
+          title="Write it myself"
+          hint="One card at a time"
+        />
         {aiAvailable ? (
-          <Tab href="/decks/new?with=ai" active={mode === "ai"}>
-            Generate with AI
-          </Tab>
+          <Tab
+            href="/decks/new?with=ai"
+            active={mode === "ai"}
+            icon={<SparkIcon className="size-4" />}
+            title="Generate with AI"
+            hint="From notes or a file"
+          />
         ) : null}
-        <Tab href="/decks/new?with=import" active={mode === "import"}>
-          Import a file
-        </Tab>
+        <Tab
+          href="/decks/new?with=import"
+          active={mode === "import"}
+          icon={<ImportIcon className="size-4" />}
+          title="Import a file"
+          hint="CSV, JSON, or Anki"
+        />
       </div>
 
-      <div className="mt-6">
+      <div
+        // Keyed on the mode so switching tabs replays the entrance instead of
+        // silently swapping content under the cursor.
+        key={mode}
+        className="mt-6 [animation:achi-fade-up_var(--dur)_var(--ease-out)]"
+      >
         {mode === "ai" && quota ? (
           <GeneratePanel remaining={quota.generations} />
         ) : mode === "import" ? (
@@ -73,24 +95,49 @@ export default async function NewDeckPage({
 function Tab({
   href,
   active,
-  children,
+  icon,
+  title,
+  hint,
 }: {
   href: string;
   active: boolean;
-  children: React.ReactNode;
+  icon: React.ReactNode;
+  title: string;
+  hint: string;
 }) {
   return (
     <Link
       href={href}
-      aria-current={active ? "page" : undefined}
+      role="tab"
+      aria-selected={active}
       className={cn(
-        "flex-1 rounded-[7px] px-3 py-1.5 text-center text-sm transition-colors",
+        "flex items-start gap-2.5 rounded-card border p-3 transition-[background-color,border-color] duration-[var(--dur-fast)]",
         active
-          ? "bg-primary-subtle font-medium text-primary"
-          : "text-muted hover:text-text",
+          ? "border-primary-border bg-primary-subtle"
+          : "border-border bg-surface hover:border-border-strong",
       )}
     >
-      {children}
+      <span className={cn("mt-0.5", active ? "text-primary" : "text-subtle")}>
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span
+          className={cn(
+            "block text-base font-medium",
+            active ? "text-primary" : "text-text",
+          )}
+        >
+          {title}
+        </span>
+        <span
+          className={cn(
+            "block text-sm",
+            active ? "text-primary/75" : "text-subtle",
+          )}
+        >
+          {hint}
+        </span>
+      </span>
     </Link>
   );
 }

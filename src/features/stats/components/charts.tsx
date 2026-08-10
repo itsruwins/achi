@@ -19,6 +19,31 @@ import { buildCalendar } from "@/features/stats/streaks";
   readable numbers, so colour is never the only channel.
 */
 
+/** Shared chart frame, so every panel on the page starts from the same box. */
+function Panel({
+  title,
+  aside,
+  children,
+  className,
+}: {
+  title: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn("rounded-card border border-border bg-surface p-4", className)}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-md font-semibold tracking-tight text-text">{title}</h2>
+        {aside ? <p className="text-sm text-subtle">{aside}</p> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 // -----------------------------------------------------------------------------
 // Stat tile — a number is a form, not a one-bar chart.
 // -----------------------------------------------------------------------------
@@ -28,24 +53,31 @@ export function StatTile({
   value,
   hint,
   accent,
+  icon,
 }: {
   label: string;
   value: string;
   hint?: string;
   accent?: boolean;
+  icon?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <p className="text-xs uppercase tracking-wide text-subtle">{label}</p>
+    <div className="rounded-card border border-border bg-surface p-4">
+      <p className="flex items-center gap-1.5">
+        {icon ? (
+          <span className={accent ? "text-accent" : "text-subtle"}>{icon}</span>
+        ) : null}
+        <span className="label-data">{label}</span>
+      </p>
       <p
         className={cn(
-          "mt-1.5 text-3xl font-semibold tracking-tight tabular-nums",
+          "tnum mt-1.5 text-3xl font-semibold tracking-tight",
           accent ? "text-accent" : "text-text",
         )}
       >
         {value}
       </p>
-      {hint ? <p className="mt-0.5 text-xs text-muted">{hint}</p> : null}
+      {hint ? <p className="mt-0.5 text-sm text-muted">{hint}</p> : null}
     </div>
   );
 }
@@ -85,18 +117,16 @@ export function ActivityHeatmap({
   const total = cells.reduce((sum, cell) => sum + cell.count, 0);
 
   return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-medium text-text">Activity</h2>
-        <p className="text-xs text-muted">
-          {total} {total === 1 ? "review" : "reviews"} in {days} days
-        </p>
-      </div>
-
-      <div className="mt-4 overflow-x-auto">
+    <Panel
+      title="Activity"
+      aside={`${total} ${total === 1 ? "review" : "reviews"} in ${days} days`}
+    >
+      {/* Scrolls inside its own container: 13 weeks of cells is wider than a
+          phone, and the page body must never scroll sideways. */}
+      <div className="mt-4 overflow-x-auto pb-1">
         <div className="flex gap-1.5">
           {/* Weekday gutter, so the grid reads as a calendar rather than a wall. */}
-          <div className="grid grid-rows-7 gap-[3px] pr-1 text-[10px] leading-[13px] text-subtle">
+          <div className="grid shrink-0 grid-rows-7 gap-[3px] pr-1 text-[10px] leading-[13px] text-subtle">
             {WEEKDAY_LABELS.map((label, index) => (
               <span key={index}>{label}</span>
             ))}
@@ -113,7 +143,8 @@ export function ActivityHeatmap({
                   title={label}
                   aria-label={label}
                   className={cn(
-                    "size-[13px] rounded-[3px]",
+                    "size-[13px] rounded-[3px] transition-[outline-color] duration-[var(--dur-fast)]",
+                    "outline outline-1 outline-transparent hover:outline-text",
                     intensityClass(cell.count),
                   )}
                 />
@@ -133,7 +164,7 @@ export function ActivityHeatmap({
         )}
         <span>More</span>
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -153,22 +184,17 @@ export function MaturityBar({ counts }: { counts: MaturityCounts }) {
 
   if (total === 0) {
     return (
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-        <h2 className="text-sm font-medium text-text">Card maturity</h2>
-        <p className="mt-2 text-sm text-muted">
-          Add a deck to review and its cards will start maturing here.
+      <Panel title="Card maturity">
+        <p className="mt-2 text-base text-muted">
+          Turn review on for a deck and its cards start here as New, then move
+          right as the intervals get longer.
         </p>
-      </section>
+      </Panel>
     );
   }
 
   return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-medium text-text">Card maturity</h2>
-        <p className="text-xs text-muted">{total} in review</p>
-      </div>
-
+    <Panel title="Card maturity" aside={`${total} in review`}>
       {/* 2px surface gaps between segments — the surface doing the separating,
           so touching fills never blur into one another. */}
       <div className="mt-4 flex h-5 gap-[2px] overflow-hidden rounded-[4px]">
@@ -199,16 +225,16 @@ export function MaturityBar({ counts }: { counts: MaturityCounts }) {
               aria-hidden="true"
             />
             <span className="min-w-0">
-              <span className="block text-sm tabular-nums text-text">
+              <span className="tnum block text-base font-medium text-text">
                 {counts[bucket.key]}
               </span>
-              <span className="block text-xs text-muted">{bucket.label}</span>
-              <span className="block text-[10px] text-subtle">{bucket.note}</span>
+              <span className="block text-sm text-muted">{bucket.label}</span>
+              <span className="block text-2xs text-subtle">{bucket.note}</span>
             </span>
           </li>
         ))}
       </ul>
-    </section>
+    </Panel>
   );
 }
 
@@ -220,13 +246,14 @@ export function ForecastChart({ days }: { days: ForecastDay[] }) {
   const peak = Math.max(1, ...days.map((day) => day.cards));
 
   return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-medium text-text">Coming up</h2>
-        <p className="text-xs text-muted">Next 7 days</p>
-      </div>
-
-      <div className="mt-5 flex h-32 items-end justify-between gap-2">
+    <Panel title="Coming up" aside="Next 7 days">
+      {/*
+        The plot area gets an explicit height rather than `h-full` on a nested
+        column — percentage heights need a resolved parent height, and an
+        auto-sized flex column doesn't give one, which silently collapses every
+        bar to nothing.
+      */}
+      <div className="mt-5 flex justify-between gap-2">
         {days.map((day, index) => {
           const height = (day.cards / peak) * 100;
           const weekday = new Date(`${day.dueOn}T00:00:00Z`).toLocaleDateString(
@@ -240,34 +267,41 @@ export function ForecastChart({ days }: { days: ForecastDay[] }) {
           return (
             <div
               key={day.dueOn}
-              className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
+              className="group flex min-w-0 flex-1 flex-col items-center gap-1.5"
             >
-              <span className="text-[11px] tabular-nums text-muted">
+              <span className="tnum text-sm text-muted">
                 {day.cards > 0 ? day.cards : ""}
               </span>
 
-              <div className="flex h-full w-full items-end justify-center">
+              <div className="flex h-24 w-full items-end justify-center">
                 <div
                   title={label}
                   aria-label={label}
                   // Capped width so a wide screen doesn't turn bars into slabs;
                   // rounded at the data end, square on the baseline.
                   className={cn(
-                    "w-full max-w-6 rounded-t-[4px]",
+                    "w-full max-w-6 rounded-t-[4px] transition-opacity duration-[var(--dur-fast)] group-hover:opacity-80",
                     day.cards > 0 ? "bg-viz-mark" : "bg-viz-empty",
                   )}
-                  style={{ height: day.cards > 0 ? `${Math.max(height, 4)}%` : "3px" }}
+                  style={{
+                    height: day.cards > 0 ? `${Math.max(height, 4)}%` : "3px",
+                  }}
                 />
               </div>
 
-              <span className="text-[11px] text-subtle">
+              <span
+                className={cn(
+                  "text-sm",
+                  index === 0 ? "font-medium text-text" : "text-subtle",
+                )}
+              >
                 {index === 0 ? "Today" : weekday}
               </span>
             </div>
           );
         })}
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -279,28 +313,27 @@ export function StrugglingCards({ cards }: { cards: StrugglingCard[] }) {
   if (cards.length === 0) return null;
 
   return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <h2 className="text-sm font-medium text-text">Giving you trouble</h2>
-      <p className="mt-0.5 text-xs text-muted">
+    <Panel title="Giving you trouble">
+      <p className="mt-0.5 max-w-[68ch] text-sm text-muted">
         Cards you&rsquo;ve forgotten more than once. Worth rewriting — a card
         that keeps failing is usually asking two questions at once.
       </p>
 
-      <ul className="mt-4 divide-y divide-border">
+      <ul className="mt-3 divide-y divide-border">
         {cards.map((card) => (
-          <li key={card.cardId} className="flex items-baseline gap-3 py-2.5">
+          <li key={card.cardId} className="flex items-baseline gap-3 py-2">
             <Link
               href={`/decks/${card.deckId}`}
-              className="min-w-0 flex-1 truncate text-sm text-text hover:text-primary"
+              className="min-w-0 flex-1 truncate text-base text-text transition-colors duration-[var(--dur-fast)] hover:text-primary"
             >
               {card.front || "(no front text)"}
             </Link>
-            <span className="shrink-0 text-xs tabular-nums text-muted">
-              {card.lapses} lapses
+            <span className="tnum shrink-0 text-sm text-danger">
+              {card.lapses} {card.lapses === 1 ? "lapse" : "lapses"}
             </span>
           </li>
         ))}
       </ul>
-    </section>
+    </Panel>
   );
 }

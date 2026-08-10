@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, IconButton } from "@/components/ui/button";
+import { Badge } from "@/components/ui/chip";
+import { EmptyState } from "@/components/ui/layout";
 import { deleteCard, moveCard } from "@/features/cards/actions";
 import { deriveCategories, type Card } from "@/features/cards/types";
+import { cn } from "@/lib/utils/cn";
 
 import { CardEditor } from "./card-editor";
 
@@ -20,14 +23,16 @@ export function CardList({ deckId, userId, cards }: Props) {
 
   if (cards.length === 0) {
     return (
-      <p className="rounded-card border border-dashed border-border-strong bg-surface p-8 text-center text-sm text-muted">
-        No cards yet. Add the first one above.
-      </p>
+      <EmptyState
+        compact
+        title="No cards yet"
+        body="Add the first one with the editor above. A card is a question on one side and its answer on the other."
+      />
     );
   }
 
   return (
-    <ol className="space-y-2">
+    <ol className="space-y-1.5">
       {cards.map((card, index) => (
         <li key={card.id}>
           {editingId === card.id ? (
@@ -39,8 +44,20 @@ export function CardList({ deckId, userId, cards }: Props) {
               onDone={() => setEditingId(null)}
             />
           ) : (
-            <article className="rounded-card border border-border bg-surface p-4">
-              <div className="flex items-start justify-between gap-4">
+            <article
+              className={cn(
+                "group relative rounded-card border border-border bg-surface p-4",
+                "transition-colors duration-[var(--dur-fast)] hover:border-border-strong",
+              )}
+            >
+              {/* The row number anchors the ordering controls to something
+                  concrete — "move up" is only meaningful if you can see where
+                  the card currently sits. */}
+              <span className="tnum absolute left-4 top-4 text-2xs text-subtle">
+                {index + 1}
+              </span>
+
+              <div className="flex items-start justify-between gap-4 pl-6">
                 <div className="min-w-0 flex-1">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <CardSide text={card.front} imageUrl={card.front_image_url} />
@@ -52,11 +69,9 @@ export function CardList({ deckId, userId, cards }: Props) {
                   </div>
 
                   {card.category || card.hint ? (
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
                       {card.category ? (
-                        <span className="rounded-full bg-primary-subtle px-2 py-0.5 font-medium text-primary">
-                          {card.category}
-                        </span>
+                        <Badge tone="primary">{card.category}</Badge>
                       ) : null}
                       {card.hint ? (
                         <span className="text-subtle">Hint: {card.hint}</span>
@@ -65,33 +80,41 @@ export function CardList({ deckId, userId, cards }: Props) {
                   ) : null}
                 </div>
 
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <div className="flex items-center gap-0.5">
-                    <MoveButton
-                      deckId={deckId}
-                      cardId={card.id}
-                      direction="up"
-                      disabled={index === 0}
-                      label="Move up"
-                    />
-                    <MoveButton
-                      deckId={deckId}
-                      cardId={card.id}
-                      direction="down"
-                      disabled={index === cards.length - 1}
-                      label="Move down"
-                    />
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setEditingId(card.id)}
-                    >
-                      Edit
-                    </Button>
-                    <DeleteCardButton deckId={deckId} cardId={card.id} />
-                  </div>
+                {/*
+                  Controls stay dimmed until the row is hovered or something
+                  inside it has focus, so a long list reads as content rather
+                  than a wall of buttons. focus-within keeps them reachable by
+                  keyboard, where there is no hover to trigger.
+                */}
+                <div
+                  className={cn(
+                    "flex shrink-0 items-center gap-0.5 transition-opacity duration-[var(--dur-fast)]",
+                    "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+                    "max-sm:opacity-100",
+                  )}
+                >
+                  <MoveButton
+                    deckId={deckId}
+                    cardId={card.id}
+                    direction="up"
+                    disabled={index === 0}
+                    label="Move up"
+                  />
+                  <MoveButton
+                    deckId={deckId}
+                    cardId={card.id}
+                    direction="down"
+                    disabled={index === cards.length - 1}
+                    label="Move down"
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setEditingId(card.id)}
+                  >
+                    Edit
+                  </Button>
+                  <DeleteCardButton deckId={deckId} cardId={card.id} />
                 </div>
               </div>
             </article>
@@ -115,9 +138,10 @@ function CardSide({
     <div className="min-w-0 space-y-2">
       {text ? (
         <p
-          className={`whitespace-pre-wrap break-words text-sm ${
-            muted ? "text-muted" : "text-text"
-          }`}
+          className={cn(
+            "whitespace-pre-wrap break-words text-base",
+            muted ? "text-muted" : "text-text",
+          )}
         >
           {text}
         </p>
@@ -159,16 +183,26 @@ function MoveButton({
       <input type="hidden" name="deckId" value={deckId} />
       <input type="hidden" name="cardId" value={cardId} />
       <input type="hidden" name="direction" value={direction} />
-      <Button
+      <IconButton
         type="submit"
         size="sm"
-        variant="ghost"
         disabled={disabled}
         aria-label={label}
         title={label}
       >
-        {direction === "up" ? "↑" : "↓"}
-      </Button>
+        <svg
+          viewBox="0 0 24 24"
+          className={cn("size-4", direction === "down" && "rotate-180")}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 19V5M6 11l6-6 6 6" />
+        </svg>
+      </IconButton>
     </form>
   );
 }
@@ -184,14 +218,20 @@ function DeleteCardButton({
     <form
       action={deleteCard}
       onSubmit={(event) => {
-        if (!confirm("Delete this card?")) event.preventDefault();
+        if (!confirm("Delete this card? This can't be undone."))
+          event.preventDefault();
       }}
     >
-      <input type="hidden" name="deckId" value={deckId} />
-      <input type="hidden" name="cardId" value={cardId} />
-      <Button type="submit" size="sm" variant="ghost">
+      <Button
+        type="submit"
+        size="sm"
+        variant="ghost"
+        className="hover:bg-danger-subtle hover:text-danger"
+      >
         Delete
       </Button>
+      <input type="hidden" name="deckId" value={deckId} />
+      <input type="hidden" name="cardId" value={cardId} />
     </form>
   );
 }

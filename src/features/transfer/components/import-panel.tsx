@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { ImportIcon } from "@/components/ui/icons";
 import { saveImportedDeck } from "@/features/transfer/actions";
 import type { TransferCard } from "@/features/transfer/format";
 import { cn } from "@/lib/utils/cn";
@@ -83,19 +84,19 @@ export function ImportPanel() {
 
     return (
       <div className="space-y-5">
-        <div className="rounded-card border border-border bg-surface p-5">
-          <p className="text-xs uppercase tracking-wide text-subtle">
-            Read from {parsed.filename}
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            {keptCount} of {parsed.cards.length} cards selected.
+        <div className="rounded-card border border-border bg-surface p-4">
+          <span className="label-data">Read from {parsed.filename}</span>
+          <p className="mt-1 text-base text-muted">
+            <span className="tnum">{keptCount}</span> of{" "}
+            <span className="tnum">{parsed.cards.length}</span> cards selected.
+            Uncheck anything you don&rsquo;t want before importing.
           </p>
         </div>
 
         {parsed.notes.length > 0 ? (
-          <ul className="space-y-1 rounded-control border border-warning bg-warning-subtle px-3 py-2">
+          <ul className="space-y-1 rounded-control border border-warning/40 bg-warning-subtle px-3 py-2">
             {parsed.notes.map((note) => (
-              <li key={note} className="text-xs text-text">
+              <li key={note} className="text-sm text-text">
                 {note}
               </li>
             ))}
@@ -105,7 +106,7 @@ export function ImportPanel() {
         {error ? (
           <p
             role="alert"
-            className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+            className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
           >
             {error}
           </p>
@@ -127,10 +128,11 @@ export function ImportPanel() {
               <li key={index}>
                 <label
                   className={cn(
-                    "flex cursor-pointer gap-3 rounded-card border p-3.5 transition-colors",
+                    "flex cursor-pointer gap-3 rounded-card border p-3.5",
+                    "transition-[background-color,border-color,opacity] duration-[var(--dur-fast)]",
                     kept
-                      ? "border-border bg-surface"
-                      : "border-border bg-bg opacity-55",
+                      ? "border-border bg-surface hover:border-border-strong"
+                      : "border-border bg-sunken opacity-55",
                   )}
                 >
                   <input
@@ -147,10 +149,10 @@ export function ImportPanel() {
                     className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
                   />
                   <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2">
-                    <p className="whitespace-pre-wrap break-words text-sm text-text">
+                    <p className="whitespace-pre-wrap break-words text-base text-text">
                       {card.front}
                     </p>
-                    <p className="whitespace-pre-wrap break-words text-sm text-muted">
+                    <p className="whitespace-pre-wrap break-words text-base text-muted">
                       {card.back}
                     </p>
                   </div>
@@ -160,9 +162,9 @@ export function ImportPanel() {
           })}
         </ul>
 
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={save} disabled={saving || keptCount === 0}>
-            {saving ? "Saving…" : `Import ${keptCount} cards`}
+        <div className="sticky bottom-20 flex flex-wrap gap-2 rounded-card border border-border bg-surface/90 p-2 shadow-raised backdrop-blur-md md:bottom-4">
+          <Button onClick={save} loading={saving} disabled={keptCount === 0}>
+            Import {keptCount} {keptCount === 1 ? "card" : "cards"}
           </Button>
           <Button
             variant="ghost"
@@ -191,10 +193,11 @@ export function ImportPanel() {
           if (file) void upload(file);
         }}
         className={cn(
-          "rounded-card border-2 border-dashed p-8 text-center transition-colors",
+          "rounded-card border border-dashed p-8 text-center",
+          "transition-[background-color,border-color] duration-[var(--dur-fast)]",
           dragging
             ? "border-primary bg-primary-subtle"
-            : "border-border-strong bg-surface",
+            : "border-border-strong bg-surface/60",
         )}
       >
         <input
@@ -209,10 +212,24 @@ export function ImportPanel() {
           }}
         />
 
-        <p className="text-sm text-text">
-          {busy ? "Reading your deck…" : "Drop a deck file here"}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "mx-auto mb-3 grid size-10 place-items-center rounded-pill transition-colors duration-[var(--dur-fast)]",
+            dragging ? "bg-primary text-primary-fg" : "bg-sunken text-muted",
+          )}
+        >
+          <ImportIcon className="size-5" />
+        </span>
+
+        <p className="text-md font-medium text-text">
+          {busy
+            ? "Reading your deck…"
+            : dragging
+              ? "Drop to read it"
+              : "Drop a deck file here"}
         </p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           An Achi export (.json), a spreadsheet (.csv), or an Anki deck (.apkg)
         </p>
 
@@ -220,27 +237,33 @@ export function ImportPanel() {
           variant="secondary"
           size="sm"
           className="mt-4"
-          disabled={busy}
+          loading={busy}
           onClick={() => inputRef.current?.click()}
         >
-          {busy ? "Reading…" : "Choose file"}
+          Choose file
         </Button>
       </div>
 
       {error ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {error}
         </p>
       ) : null}
 
       <div className="rounded-card border border-border bg-surface p-4">
-        <h2 className="text-sm font-medium text-text">Building a CSV yourself?</h2>
-        <p className="mt-1 text-xs text-muted">
-          Use the columns <code className="font-mono">front, back, category, hint</code>.
-          A header row is optional — without one, columns are read in that order.
+        <h2 className="text-md font-semibold tracking-tight text-text">
+          Building a CSV yourself?
+        </h2>
+        <p className="mt-1 max-w-[62ch] text-base text-muted">
+          Use the columns{" "}
+          <code className="rounded bg-sunken px-1 py-0.5 font-mono text-sm">
+            front, back, category, hint
+          </code>
+          . A header row is optional — without one, columns are read in that
+          order.
         </p>
         <a href="/api/import/template" download className="mt-3 inline-block">
           <Button variant="secondary" size="sm">

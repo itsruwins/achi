@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { CheckIcon } from "@/components/ui/icons";
 import { PASSWORD_MIN_LENGTH } from "@/features/auth/validation";
 import type { AuthFormState } from "@/features/auth/actions";
 
@@ -28,9 +29,14 @@ export function CredentialsForm({ action, mode }: Props) {
 
   if (state.awaitingConfirmation) {
     return (
-      <div className="rounded-card border border-border bg-primary-subtle p-5">
-        <h2 className="text-sm font-medium text-text">Check your email</h2>
-        <p className="mt-1.5 text-sm text-muted">
+      <div className="text-center">
+        <span className="mx-auto grid size-10 place-items-center rounded-pill bg-primary-subtle text-primary">
+          <CheckIcon className="size-5" />
+        </span>
+        <h2 className="mt-3 text-md font-semibold tracking-tight text-text">
+          Check your email
+        </h2>
+        <p className="mt-1 text-base text-muted">
           We sent a confirmation link to{" "}
           <span className="font-medium text-text">
             {state.awaitingConfirmation}
@@ -46,7 +52,7 @@ export function CredentialsForm({ action, mode }: Props) {
       {state.formError ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {state.formError}
         </p>
@@ -80,14 +86,8 @@ export function CredentialsForm({ action, mode }: Props) {
         />
       </Field>
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending
-          ? isSignUp
-            ? "Creating account…"
-            : "Signing in…"
-          : isSignUp
-            ? "Create account"
-            : "Sign in"}
+      <Button type="submit" size="lg" loading={isPending} className="w-full">
+        {isSignUp ? "Create account" : "Sign in"}
       </Button>
     </form>
   );

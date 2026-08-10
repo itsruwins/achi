@@ -57,7 +57,9 @@ export async function getProfile(userId: string): Promise<Profile | null> {
  */
 export async function requireOnboardedUser(): Promise<{
   user: SessionUser;
-  profile: Profile;
+  // `username` is non-null past the redirect below. Encoding that in the type
+  // saves every caller a check the guard has already done.
+  profile: Profile & { username: string };
 }> {
   const user = await getSessionUser();
   if (!user) redirect("/sign-in");
@@ -66,7 +68,12 @@ export async function requireOnboardedUser(): Promise<{
 
   // No profile row means the trigger in 0001_auth.sql did not run — most
   // likely the migration has not been applied yet.
-  if (!profile || !profile.username) redirect("/welcome");
+  if (!profile) redirect("/welcome");
 
-  return { user, profile };
+  // Narrowed through a local: TypeScript refines `username` on its own, but not
+  // the object that holds it, so the value is carried back out explicitly.
+  const { username } = profile;
+  if (!username) redirect("/welcome");
+
+  return { user, profile: { ...profile, username } };
 }

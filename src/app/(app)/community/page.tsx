@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/chip";
 import { Input } from "@/components/ui/field";
+import { CommunityIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
+import { EmptyState, PageHeader, Section } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { PublicDeckCard } from "@/features/community/components/deck-card";
 import { listCommunities, listPublicDecks } from "@/features/community/queries";
@@ -23,46 +26,64 @@ export default async function CommunityPage({
   ]);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-text">
-          Community
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Decks other people have made public, and groups you can join.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        title="Community"
+        description="Decks other people have made public, and groups you can join."
+        actions={
+          <Link href="/community/new">
+            <Button>
+              <PlusIcon className="size-4" />
+              Start a community
+            </Button>
+          </Link>
+        }
+      />
 
       {/* GET form: the search term lives in the URL, so results are linkable
           and the page works without JavaScript. */}
-      <form method="get" className="flex gap-2">
-        <Input
-          name="q"
-          defaultValue={search}
-          placeholder="Search public decks…"
-          aria-label="Search public decks"
-        />
+      <form method="get" className="flex max-w-lg gap-2">
+        <div className="relative flex-1">
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle" />
+          <Input
+            name="q"
+            defaultValue={search}
+            placeholder="Search public decks…"
+            aria-label="Search public decks"
+            className="pl-9"
+          />
+        </div>
         <Button type="submit">Search</Button>
       </form>
 
-      <section>
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-medium text-text">
-            {search ? `Decks matching “${search}”` : "Public decks"}
-          </h2>
-          <Link href="/community/new" className="text-sm text-primary underline">
-            Start a community
-          </Link>
-        </div>
-
+      <Section
+        title={search ? `Decks matching “${search}”` : "Public decks"}
+        action={
+          decks.length > 0 ? (
+            <span className="tnum text-sm text-subtle">{decks.length}</span>
+          ) : null
+        }
+      >
         {decks.length === 0 ? (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface p-10 text-center text-sm text-muted">
-            {search
-              ? "Nothing matched that search."
-              : "No public decks yet. Set one of yours to Public and it'll show up here."}
-          </p>
+          <EmptyState
+            compact
+            icon={<SearchIcon className="size-5" />}
+            title={search ? "Nothing matched that search" : "No public decks yet"}
+            body={
+              search
+                ? "Try a shorter or more general term."
+                : "Set one of your decks to Public in its settings and it'll be listed here for anyone to study."
+            }
+            action={
+              search ? (
+                <Link href="/community">
+                  <Button variant="secondary">Clear search</Button>
+                </Link>
+              ) : null
+            }
+          />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {decks.map((deck) => (
               <li key={deck.id}>
                 <PublicDeckCard deck={deck} />
@@ -70,29 +91,31 @@ export default async function CommunityPage({
             ))}
           </ul>
         )}
-      </section>
+      </Section>
 
       {mine.length > 0 ? (
-        <section>
-          <h2 className="mb-3 text-sm font-medium text-text">Your communities</h2>
+        <Section title="Your communities">
           <CommunityList communities={mine} />
-        </section>
+        </Section>
       ) : null}
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium text-text">Browse communities</h2>
+      <Section title="Browse communities">
         {communities.length === 0 ? (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface p-10 text-center text-sm text-muted">
-            No communities yet.{" "}
-            <Link href="/community/new" className="text-primary underline">
-              Start the first one
-            </Link>
-            .
-          </p>
+          <EmptyState
+            compact
+            icon={<CommunityIcon className="size-5" />}
+            title="No communities yet"
+            body="A community is a shared space for decks and posts — a class, a study group, a subject."
+            action={
+              <Link href="/community/new">
+                <Button>Start the first one</Button>
+              </Link>
+            }
+          />
         ) : (
           <CommunityList communities={communities} />
         )}
-      </section>
+      </Section>
     </div>
   );
 }
@@ -108,23 +131,25 @@ function CommunityList({
         <li key={community.id}>
           <Link
             href={`/c/${community.slug}`}
-            className="block rounded-card border border-border bg-surface p-4 transition-colors hover:border-primary"
+            className="block h-full rounded-card border border-border bg-surface p-4 transition-[border-color,box-shadow,transform] duration-[var(--dur)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-primary-border hover:shadow-raised"
           >
             <div className="flex items-baseline justify-between gap-2">
-              <h3 className="truncate font-medium text-text">{community.name}</h3>
-              <span className="shrink-0 text-xs text-subtle">
+              <h3 className="truncate text-md font-medium text-text">
+                {community.name}
+              </h3>
+              <span className="tnum shrink-0 text-sm text-subtle">
                 {community.member_count}{" "}
                 {community.member_count === 1 ? "member" : "members"}
               </span>
             </div>
             {community.description ? (
-              <p className="mt-1 line-clamp-2 text-sm text-muted">
+              <p className="mt-1 line-clamp-2 text-base text-muted">
                 {community.description}
               </p>
             ) : null}
             {community.join_policy === "invite_only" ? (
-              <span className="mt-2 inline-block rounded-full bg-accent-subtle px-2 py-0.5 text-xs text-accent">
-                Invite only
+              <span className="mt-2 inline-block">
+                <Badge tone="accent">Invite only</Badge>
               </span>
             ) : null}
           </Link>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { EmptyState, PageHeader, Section } from "@/components/ui/layout";
+import { Avatar } from "@/components/shell/user-menu";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { toggleFollow } from "@/features/community/actions";
 import { PublicDeckCard } from "@/features/community/components/deck-card";
@@ -35,56 +37,61 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
   ]);
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-text">
-            {profile.display_name ?? `@${profile.username}`}
-          </h1>
-          {profile.display_name ? (
-            <p className="text-sm text-muted">@{profile.username}</p>
-          ) : null}
-          {profile.bio ? (
-            <p className="mt-2 max-w-prose text-sm text-muted">{profile.bio}</p>
-          ) : null}
-
-          <div className="mt-3 flex gap-4 text-sm text-muted">
-            <span>
-              <span className="font-medium text-text">{stats.publicDecks}</span>{" "}
-              public {stats.publicDecks === 1 ? "deck" : "decks"}
+    <div>
+      <PageHeader
+        title={
+          <span className="flex items-center gap-3">
+            <Avatar
+              username={profile.username ?? username}
+              displayName={profile.display_name}
+              avatarUrl={profile.avatar_url}
+              className="size-10 text-base"
+            />
+            <span className="min-w-0">
+              {profile.display_name ?? `@${profile.username}`}
             </span>
+          </span>
+        }
+        description={profile.bio}
+        meta={
+          <span className="flex flex-wrap gap-x-4 gap-y-1">
+            {profile.display_name ? <span>@{profile.username}</span> : null}
+            <Stat value={stats.publicDecks} one="public deck" many="public decks" />
+            <Stat value={stats.followers} one="follower" many="followers" />
             <span>
-              <span className="font-medium text-text">{stats.followers}</span>{" "}
-              {stats.followers === 1 ? "follower" : "followers"}
-            </span>
-            <span>
-              <span className="font-medium text-text">{stats.following}</span>{" "}
+              <span className="tnum font-medium text-text">
+                {stats.following}
+              </span>{" "}
               following
             </span>
-          </div>
-        </div>
+          </span>
+        }
+        actions={
+          isSelf ? null : (
+            <form action={toggleFollow}>
+              <input type="hidden" name="userId" value={profile.id} />
+              <input type="hidden" name="username" value={profile.username ?? ""} />
+              <Button type="submit" variant={following ? "secondary" : "primary"}>
+                {following ? "Following" : "Follow"}
+              </Button>
+            </form>
+          )
+        }
+      />
 
-        {isSelf ? null : (
-          <form action={toggleFollow}>
-            <input type="hidden" name="userId" value={profile.id} />
-            <input type="hidden" name="username" value={profile.username ?? ""} />
-            <Button type="submit" variant={following ? "secondary" : "primary"}>
-              {following ? "Following" : "Follow"}
-            </Button>
-          </form>
-        )}
-      </header>
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium text-text">Public decks</h2>
+      <Section title="Public decks">
         {decks.length === 0 ? (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface p-10 text-center text-sm text-muted">
-            {isSelf
-              ? "None of your decks are public yet. Set one to Public in its settings."
-              : "This person hasn't shared any decks publicly."}
-          </p>
+          <EmptyState
+            compact
+            title={isSelf ? "None of your decks are public" : "Nothing public yet"}
+            body={
+              isSelf
+                ? "Open a deck, go to Settings, and set it to Public. It'll appear here and in Community."
+                : "This person hasn't shared any decks publicly."
+            }
+          />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {decks.map((deck) => (
               <li key={deck.id}>
                 <PublicDeckCard deck={deck} />
@@ -92,7 +99,24 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
             ))}
           </ul>
         )}
-      </section>
+      </Section>
     </div>
+  );
+}
+
+function Stat({
+  value,
+  one,
+  many,
+}: {
+  value: number;
+  one: string;
+  many: string;
+}) {
+  return (
+    <span>
+      <span className="tnum font-medium text-text">{value}</span>{" "}
+      {value === 1 ? one : many}
+    </span>
   );
 }

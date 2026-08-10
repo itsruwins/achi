@@ -131,6 +131,35 @@ export async function countDueCards(userId: string): Promise<number> {
   return count ?? 0;
 }
 
+/**
+ * Due counts keyed by deck, for the badges on the deck grid.
+ *
+ * One query returning `deck_id` per due row, tallied here — the alternative is
+ * a count query per deck, which is a dozen round trips to render one page.
+ */
+export async function countDueByDeck(
+  userId: string,
+): Promise<Record<string, number>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("card_srs")
+    .select("deck_id")
+    .eq("user_id", userId)
+    .lte("due_date", todayString());
+
+  if (error) {
+    console.error("[srs] countDueByDeck failed:", error.message);
+    return {};
+  }
+
+  const counts: Record<string, number> = {};
+  for (const row of (data ?? []) as { deck_id: string }[]) {
+    counts[row.deck_id] = (counts[row.deck_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
 /** Topics present among the cards currently due, for the review filter. */
 export async function listDueCategories(userId: string): Promise<string[]> {
   const due = await listDueCards(userId, { limit: 1000 });

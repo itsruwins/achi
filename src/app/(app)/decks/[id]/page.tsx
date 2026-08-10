@@ -3,6 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/chip";
+import { ReviewIcon, StudyIcon } from "@/components/ui/icons";
+import { Dot, EmptyState, PageHeader, Section } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { TutorPanel } from "@/features/ai/components/tutor-panel";
 import { getQuotaRemaining } from "@/features/ai/quota";
@@ -52,103 +55,113 @@ export default async function DeckPage({ params }: PageProps<"/decks/[id]">) {
   const categories = deriveCategories(cards);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link href="/decks" className="text-sm text-muted hover:text-text">
-          ← Back to decks
-        </Link>
-
-        <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-text">
-              {deck.emoji ? (
-                <span aria-hidden="true">{deck.emoji}</span>
-              ) : null}
-              {deck.title}
-            </h1>
-
-            {deck.description ? (
-              <p className="mt-1 max-w-2xl text-sm text-muted">
-                {deck.description}
-              </p>
-            ) : null}
-
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-subtle">
-              <span>
-                {deck.card_count} {deck.card_count === 1 ? "card" : "cards"}
+    <div>
+      <PageHeader
+        backHref="/decks"
+        backLabel="Decks"
+        title={
+          <span className="flex items-center gap-2.5">
+            {deck.emoji ? (
+              <span
+                aria-hidden="true"
+                className="grid size-9 shrink-0 place-items-center rounded-control bg-sunken text-xl leading-none"
+              >
+                {deck.emoji}
               </span>
-              <span aria-hidden="true">·</span>
-              <span>{VISIBILITY_LABELS[deck.visibility]}</span>
-              {categories.length > 0 ? (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span>
-                    {categories.length}{" "}
-                    {categories.length === 1 ? "topic" : "topics"}
-                  </span>
-                </>
-              ) : null}
-            </div>
-          </div>
-
-          {isOwner ? (
+            ) : null}
+            <span className="min-w-0">{deck.title}</span>
+          </span>
+        }
+        description={deck.description}
+        meta={
+          <>
+            <span className="tnum">
+              {deck.card_count} {deck.card_count === 1 ? "card" : "cards"}
+            </span>
+            <Dot />
+            <span>{VISIBILITY_LABELS[deck.visibility]}</span>
+            {categories.length > 0 ? (
+              <>
+                <Dot />
+                <span className="tnum">
+                  {categories.length}{" "}
+                  {categories.length === 1 ? "topic" : "topics"}
+                </span>
+              </>
+            ) : null}
+            {enrolled ? (
+              <>
+                <Dot />
+                <Badge tone="primary">In review</Badge>
+              </>
+            ) : null}
+          </>
+        }
+        actions={
+          isOwner ? (
             <DeckSettings
               deck={deck}
               folders={folders}
               shareToken={shareToken}
             />
-          ) : null}
-        </div>
+          ) : null
+        }
+      />
 
-        {cards.length > 0 ? (
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link href={`/study/flashcards?deck=${deck.id}`}>
-              <Button>Flashcards</Button>
+      {/*
+        The study actions are the point of the page, so they sit in their own
+        bar directly under the title rather than mixed into the header's action
+        cluster with settings and sharing.
+      */}
+      {cards.length > 0 ? (
+        <div className="-mt-1 mb-6 flex flex-wrap items-center gap-2 border-y border-border py-3">
+          <Link href={`/study/flashcards?deck=${deck.id}`}>
+            <Button>
+              <StudyIcon className="size-4" />
+              Flashcards
+            </Button>
+          </Link>
+          <Link href={`/study/quiz?deck=${deck.id}&type=multiple_choice`}>
+            <Button variant="secondary">Quiz</Button>
+          </Link>
+          {enrolled ? (
+            <Link href={`/review?deck=${deck.id}`}>
+              <Button variant="secondary">
+                <ReviewIcon className="size-4" />
+                Review due
+              </Button>
             </Link>
-            <Link href={`/study/quiz?deck=${deck.id}&type=multiple_choice`}>
-              <Button variant="secondary">Quiz</Button>
-            </Link>
-            {enrolled ? (
-              <Link href={`/review?deck=${deck.id}`}>
-                <Button variant="secondary">Review due</Button>
-              </Link>
-            ) : null}
+          ) : null}
+          <span className="ml-auto">
             <EnrollToggle deckId={deck.id} enrolled={enrolled} />
-          </div>
-        ) : null}
-      </div>
+          </span>
+        </div>
+      ) : null}
 
       {aiAvailable && quota && cards.length > 0 ? (
         <TutorPanel deckId={deck.id} remaining={quota.tutor} />
       ) : null}
 
       {isOwner ? (
-        <section>
-          <h2 className="mb-3 text-sm font-medium text-text">Add a card</h2>
-          <CardEditor
-            deckId={deck.id}
-            userId={user.id}
-            categories={categories}
-          />
-        </section>
+        <Section title="Add a card">
+          <CardEditor deckId={deck.id} userId={user.id} categories={categories} />
+        </Section>
       ) : null}
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium text-text">
-          Cards
-          {cards.length > 0 ? (
-            <span className="ml-2 font-normal text-subtle">
-              {cards.length}
-            </span>
-          ) : null}
-        </h2>
-
+      <Section
+        title="Cards"
+        action={
+          cards.length > 0 ? (
+            <span className="tnum text-sm text-subtle">{cards.length}</span>
+          ) : null
+        }
+      >
         {isOwner ? (
           <CardList deckId={deck.id} userId={user.id} cards={cards} />
         ) : (
           <ReadOnlyCards cards={cards} />
         )}
-      </section>
+      </Section>
     </div>
   );
 }
@@ -161,23 +174,25 @@ function ReadOnlyCards({
 }) {
   if (cards.length === 0) {
     return (
-      <p className="rounded-card border border-dashed border-border-strong bg-surface p-8 text-center text-sm text-muted">
-        This deck has no cards yet.
-      </p>
+      <EmptyState
+        compact
+        title="This deck has no cards yet"
+        body="The owner hasn't added any. Check back later."
+      />
     );
   }
 
   return (
-    <ol className="space-y-2">
+    <ol className="space-y-1.5">
       {cards.map((card) => (
         <li
           key={card.id}
           className="grid gap-3 rounded-card border border-border bg-surface p-4 sm:grid-cols-2"
         >
-          <p className="whitespace-pre-wrap break-words text-sm text-text">
+          <p className="whitespace-pre-wrap break-words text-base text-text">
             {card.front}
           </p>
-          <p className="whitespace-pre-wrap break-words text-sm text-muted">
+          <p className="whitespace-pre-wrap break-words text-base text-muted">
             {card.back}
           </p>
         </li>

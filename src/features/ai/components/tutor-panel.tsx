@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
+import { SparkIcon } from "@/components/ui/icons";
 import {
   MAX_TUTOR_MESSAGE_CHARS,
   TUTOR_HISTORY_TURNS,
 } from "@/features/ai/limits";
+import { cn } from "@/lib/utils/cn";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -100,20 +102,29 @@ export function TutorPanel({
 
   if (!open) {
     return (
-      <Button variant="secondary" onClick={() => setOpen(true)}>
-        Ask about this deck
-      </Button>
+      <div className="mb-6">
+        <Button variant="secondary" onClick={() => setOpen(true)}>
+          <SparkIcon className="size-4 text-primary" />
+          Ask about this deck
+        </Button>
+      </div>
     );
   }
 
+  const spent = remaining > 0 ? 1 - left / remaining : 1;
+
   return (
-    <section className="rounded-card border border-border bg-surface shadow-card">
-      <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <div>
-          <h2 className="text-sm font-medium text-text">Tutor</h2>
-          <p className="text-xs text-subtle">
-            Scoped to this deck · {left} {left === 1 ? "message" : "messages"}{" "}
-            left today
+    <section className="mb-6 overflow-hidden rounded-card border border-border bg-surface shadow-card [animation:achi-fade-up_var(--dur)_var(--ease-out)]">
+      <header className="flex items-center justify-between gap-3 border-b border-border bg-sunken px-4 py-3">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-1.5 text-md font-semibold tracking-tight text-text">
+            <SparkIcon className="size-4 text-primary" />
+            Tutor
+          </h2>
+          <p className="text-sm text-subtle">
+            Scoped to this deck ·{" "}
+            <span className="tnum">{left}</span>{" "}
+            {left === 1 ? "message" : "messages"} left today
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
@@ -121,20 +132,39 @@ export function TutorPanel({
         </Button>
       </header>
 
-      <div ref={logRef} className="max-h-96 space-y-3 overflow-y-auto px-5 py-4">
+      {/* Quota as a hairline under the header — present but not something you
+          have to read on every message. */}
+      <div className="h-0.5 bg-border">
+        <div
+          className="h-full bg-primary transition-[width] duration-[var(--dur-slow)] ease-[var(--ease-out)]"
+          style={{ width: `${Math.max(0, Math.min(1, 1 - spent)) * 100}%` }}
+        />
+      </div>
+
+      <div
+        ref={logRef}
+        className="max-h-96 space-y-2.5 overflow-y-auto px-4 py-4"
+        aria-live="polite"
+      >
         {turns.length === 0 ? (
-          <div className="space-y-2">
-            <p className="text-sm text-muted">
-              Ask about anything in this deck.
+          <div className="space-y-2.5">
+            <p className="text-base text-muted">
+              Ask about anything in this deck — the cards are the context, so
+              answers stay on topic.
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {SUGGESTIONS.map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => send(suggestion)}
                   disabled={left <= 0}
-                  className="rounded-full border border-border px-3 py-1 text-xs text-muted transition-colors hover:border-border-strong hover:text-text disabled:opacity-55"
+                  className={cn(
+                    "rounded-pill border border-border bg-surface px-3 py-1 text-sm text-muted",
+                    "transition-[border-color,color,background-color] duration-[var(--dur-fast)]",
+                    "hover:border-primary-border hover:bg-primary-subtle hover:text-primary",
+                    "disabled:pointer-events-none disabled:opacity-[var(--disabled-opacity)]",
+                  )}
                 >
                   {suggestion}
                 </button>
@@ -146,13 +176,14 @@ export function TutorPanel({
         {turns.map((turn, index) => (
           <div
             key={index}
-            className={
+            className={cn(
+              "w-fit rounded-card px-3.5 py-2.5 [animation:achi-fade-up_var(--dur)_var(--ease-out)]",
               turn.role === "user"
-                ? "ml-auto max-w-[85%] rounded-card bg-primary-subtle px-3.5 py-2.5"
-                : "max-w-[92%] rounded-card bg-bg px-3.5 py-2.5"
-            }
+                ? "ml-auto max-w-[85%] bg-primary-subtle"
+                : "max-w-[92%] border border-border bg-sunken",
+            )}
           >
-            <p className="whitespace-pre-wrap text-sm text-text">
+            <p className="whitespace-pre-wrap text-base leading-relaxed text-text">
               {turn.content}
               {/* A blinking caret is the only signal that a slow first token
                   isn't a hang. */}
@@ -167,7 +198,7 @@ export function TutorPanel({
       </div>
 
       {error ? (
-        <p role="alert" className="px-5 pb-2 text-xs text-danger">
+        <p role="alert" className="px-4 pb-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -177,7 +208,7 @@ export function TutorPanel({
           event.preventDefault();
           send(draft);
         }}
-        className="flex gap-2 border-t border-border px-5 py-3"
+        className="flex gap-2 border-t border-border px-4 py-3"
       >
         <Input
           value={draft}
@@ -190,12 +221,16 @@ export function TutorPanel({
           }
           aria-label="Message the tutor"
         />
-        <Button type="submit" disabled={streaming || left <= 0 || !draft.trim()}>
-          {streaming ? "…" : "Send"}
+        <Button
+          type="submit"
+          loading={streaming}
+          disabled={left <= 0 || !draft.trim()}
+        >
+          Send
         </Button>
       </form>
 
-      <p className="px-5 pb-4 text-[11px] text-subtle">
+      <p className="border-t border-border bg-sunken px-4 py-2.5 text-sm text-subtle">
         The tutor can be wrong — verify anything that matters against your
         source. Your messages and this deck&rsquo;s cards are sent to Groq; no
         chat history is stored by Achi.

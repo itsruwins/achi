@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/field";
+import { Badge } from "@/components/ui/chip";
+import { Input, Select, Textarea } from "@/components/ui/field";
+import { Dot, EmptyState, PageHeader, Section } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import {
   createPost,
@@ -52,33 +54,34 @@ export default async function CommunityPage({
   ]);
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <Link href="/community" className="text-sm text-muted hover:text-text">
-            ← Community
-          </Link>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-text">
-            {community.name}
-          </h1>
-          {community.description ? (
-            <p className="mt-1 max-w-prose text-sm text-muted">
-              {community.description}
-            </p>
-          ) : null}
-          <p className="mt-2 text-xs text-subtle">
-            {community.member_count}{" "}
-            {community.member_count === 1 ? "member" : "members"}
-            {community.join_policy === "invite_only" ? " · invite only" : ""}
-          </p>
-        </div>
-
-        {member ? (
-          isOwner ? (
-            <span className="rounded-full bg-primary-subtle px-3 py-1 text-xs font-medium text-primary">
-              You own this
+    <div>
+      <PageHeader
+        backHref="/community"
+        backLabel="Community"
+        title={community.name}
+        description={community.description}
+        meta={
+          <>
+            <span className="tnum">
+              {community.member_count}{" "}
+              {community.member_count === 1 ? "member" : "members"}
             </span>
-          ) : (
+            {community.join_policy === "invite_only" ? (
+              <>
+                <Dot />
+                <Badge tone="accent">Invite only</Badge>
+              </>
+            ) : null}
+            {isOwner ? (
+              <>
+                <Dot />
+                <Badge tone="primary">You own this</Badge>
+              </>
+            ) : null}
+          </>
+        }
+        actions={
+          member && !isOwner ? (
             <form action={leaveCommunity}>
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="communityId" value={community.id} />
@@ -86,14 +89,14 @@ export default async function CommunityPage({
                 Leave
               </Button>
             </form>
-          )
-        ) : null}
-      </header>
+          ) : null
+        }
+      />
 
       {errorMessage ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="mb-5 rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {errorMessage}
         </p>
@@ -101,15 +104,15 @@ export default async function CommunityPage({
 
       {!member ? (
         <section className="rounded-card border border-border bg-surface p-6">
-          <h2 className="text-sm font-medium text-text">
+          <h2 className="text-md font-semibold tracking-tight text-text">
             {community.join_policy === "open"
               ? "Join to see posts and shared decks"
               : "This community is invite only"}
           </h2>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 max-w-[62ch] text-base text-muted">
             {community.join_policy === "open"
-              ? "Anyone can join."
-              : "Enter the invite code someone gave you."}
+              ? "Anyone can join. Members can post and share decks with the group."
+              : "Enter the invite code someone in the community gave you."}
           </p>
 
           <form action={joinCommunity} className="mt-4 flex flex-wrap gap-2">
@@ -128,11 +131,10 @@ export default async function CommunityPage({
         </section>
       ) : (
         <>
-          <section>
-            <h2 className="mb-3 text-sm font-medium text-text">Post</h2>
+          <Section title="Posts">
             <form
               action={createPost}
-              className="space-y-3 rounded-card border border-border bg-surface p-4"
+              className="space-y-2.5 rounded-card border border-border bg-surface p-4"
             >
               <input type="hidden" name="communityId" value={community.id} />
               <input type="hidden" name="slug" value={slug} />
@@ -149,133 +151,136 @@ export default async function CommunityPage({
               </Button>
             </form>
 
-            <ul className="mt-4 space-y-3">
-              {posts.map((post) => (
-                <li
-                  key={post.id}
-                  className="rounded-card border border-border bg-surface p-4"
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <p className="text-xs text-subtle">
-                      {post.author?.username ? (
-                        <Link
-                          href={`/u/${post.author.username}`}
-                          className="hover:text-text"
-                        >
-                          @{post.author.username}
-                        </Link>
-                      ) : (
-                        "Someone"
-                      )}
-                    </p>
-                    <form action={deletePost}>
-                      <input type="hidden" name="postId" value={post.id} />
-                      <input type="hidden" name="slug" value={slug} />
-                      {/* Shown to everyone; RLS rejects it unless the caller is
-                          the author or the community owner. */}
-                      <button
-                        type="submit"
-                        className="text-xs text-subtle hover:text-danger"
-                      >
-                        Delete
-                      </button>
-                    </form>
-                  </div>
-                  <p className="mt-1.5 whitespace-pre-wrap text-sm text-text">
-                    {post.body}
-                  </p>
-                </li>
-              ))}
-            </ul>
-
             {posts.length === 0 ? (
-              <p className="mt-4 rounded-card border border-dashed border-border-strong bg-surface p-8 text-center text-sm text-muted">
-                Nothing posted yet.
-              </p>
-            ) : null}
-          </section>
+              <div className="mt-3">
+                <EmptyState
+                  compact
+                  title="Nothing posted yet"
+                  body="Be the first — a question or what you're working through this week is a fine start."
+                />
+              </div>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {posts.map((post) => (
+                  <li
+                    key={post.id}
+                    className="group rounded-card border border-border bg-surface p-4"
+                  >
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-sm text-subtle">
+                        {post.author?.username ? (
+                          <Link
+                            href={`/u/${post.author.username}`}
+                            className="transition-colors hover:text-text"
+                          >
+                            @{post.author.username}
+                          </Link>
+                        ) : (
+                          "Someone"
+                        )}
+                      </p>
+                      <form action={deletePost}>
+                        <input type="hidden" name="postId" value={post.id} />
+                        <input type="hidden" name="slug" value={slug} />
+                        {/* Shown to everyone; RLS rejects it unless the caller
+                            is the author or the community owner. */}
+                        <button
+                          type="submit"
+                          className="text-sm text-subtle opacity-0 transition-[opacity,color] duration-[var(--dur-fast)] hover:text-danger focus-visible:opacity-100 group-hover:opacity-100 max-sm:opacity-100"
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                    <p className="mt-1.5 whitespace-pre-wrap text-base leading-relaxed text-text">
+                      {post.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
 
-          <section>
-            <h2 className="mb-3 text-sm font-medium text-text">Shared decks</h2>
-
+          <Section title="Shared decks">
             {myDecks.length > 0 ? (
               <form
                 action={shareDeckToCommunity}
-                className="mb-4 flex flex-wrap gap-2 rounded-card border border-border bg-surface p-4"
+                className="mb-3 flex flex-wrap gap-2 rounded-card border border-border bg-surface p-3"
               >
                 <input type="hidden" name="communityId" value={community.id} />
                 <input type="hidden" name="slug" value={slug} />
-                <select
-                  name="deckId"
-                  required
-                  defaultValue=""
-                  aria-label="Deck to share"
-                  className="h-9 flex-1 rounded-control border border-border-strong bg-surface px-3 text-sm text-text"
-                >
-                  <option value="" disabled>
-                    Choose one of your decks…
-                  </option>
-                  {myDecks.map((deck) => (
-                    <option key={deck.id} value={deck.id}>
-                      {deck.title}
+                <div className="min-w-48 flex-1">
+                  <Select
+                    name="deckId"
+                    required
+                    defaultValue=""
+                    aria-label="Deck to share"
+                  >
+                    <option value="" disabled>
+                      Choose one of your decks…
                     </option>
-                  ))}
-                </select>
-                <Button type="submit" size="sm" variant="secondary">
+                    {myDecks.map((deck) => (
+                      <option key={deck.id} value={deck.id}>
+                        {deck.title}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <Button type="submit" variant="secondary">
                   Share here
                 </Button>
               </form>
             ) : null}
 
             {decks.length === 0 ? (
-              <p className="rounded-card border border-dashed border-border-strong bg-surface p-8 text-center text-sm text-muted">
-                No decks shared yet.
-              </p>
+              <EmptyState
+                compact
+                title="No decks shared yet"
+                body="Sharing a deck here lets every member study it without them having to find it."
+              />
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {decks.map((deck) => (
                   <li key={deck.id}>
                     <Link
                       href={`/decks/${deck.id}`}
-                      className="block rounded-card border border-border bg-surface p-4 transition-colors hover:border-primary"
+                      className="block rounded-card border border-border bg-surface p-4 transition-[border-color,box-shadow,transform] duration-[var(--dur)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-primary-border hover:shadow-raised"
                     >
-                      <p className="truncate font-medium text-text">
+                      <p className="truncate text-md font-medium text-text">
                         {deck.emoji ? `${deck.emoji} ` : ""}
                         {deck.title}
                       </p>
-                      <p className="mt-1 text-xs text-subtle">
-                        {deck.card_count} cards
+                      <p className="tnum mt-1 text-sm text-subtle">
+                        {deck.card_count}{" "}
+                        {deck.card_count === 1 ? "card" : "cards"}
                       </p>
                     </Link>
                   </li>
                 ))}
               </ul>
             )}
-          </section>
+          </Section>
         </>
       )}
 
       {isOwner && community.join_policy === "invite_only" ? (
-        <InviteCodePanel slug={slug} />
+        <Section title="Inviting people">
+          <div className="rounded-card border border-border bg-surface p-4">
+            {/*
+              The invite code is not readable by the client — the policies expose
+              the community row but the code is checked server-side inside
+              join_community_with_code. Owners get the link, not the code.
+            */}
+            <p className="max-w-[62ch] text-base text-muted">
+              Share this link along with the invite code you set when creating
+              the community. Anyone with both can join.
+            </p>
+            <p className="mt-2 inline-block rounded-control bg-sunken px-2.5 py-1.5 font-mono text-sm text-text">
+              /c/{slug}
+            </p>
+          </div>
+        </Section>
       ) : null}
     </div>
-  );
-}
-
-/**
- * The invite code is not readable by the client — the policies expose the
- * community row but the code is checked server-side inside
- * join_community_with_code. Owners get a link that carries it instead.
- */
-function InviteCodePanel({ slug }: { slug: string }) {
-  return (
-    <section className="rounded-card border border-border bg-surface p-4">
-      <h2 className="text-sm font-medium text-text">Inviting people</h2>
-      <p className="mt-1 text-xs text-muted">
-        Share the community link and the invite code you set when creating it.
-        Anyone with both can join.
-      </p>
-      <p className="mt-2 font-mono text-xs text-subtle">/c/{slug}</p>
-    </section>
   );
 }

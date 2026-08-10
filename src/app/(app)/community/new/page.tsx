@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { PageHeader } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { NewCommunityForm } from "@/features/community/components/new-community-form";
 
@@ -11,20 +11,13 @@ export default async function NewCommunityPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <Link href="/community" className="text-sm text-muted hover:text-text">
-        ← Community
-      </Link>
-
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-text">
-        Start a community
-      </h1>
-      <p className="mt-1 text-sm text-muted">
-        A place for a class or study group to post and share decks.
-      </p>
-
-      <div className="mt-6">
-        <NewCommunityForm />
-      </div>
+      <PageHeader
+        backHref="/community"
+        backLabel="Community"
+        title="Start a community"
+        description="A place for a class or study group to post and share decks."
+      />
+      <NewCommunityForm />
     </div>
   );
 }

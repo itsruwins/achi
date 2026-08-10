@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { createDeck, type DeckFormState } from "@/features/decks/actions";
 import type { Folder } from "@/features/folders/queries";
 
@@ -18,7 +18,7 @@ export function NewDeckForm({ folders }: { folders: Folder[] }) {
       {state.formError ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {state.formError}
         </p>
@@ -67,24 +67,19 @@ export function NewDeckForm({ folders }: { folders: Folder[] }) {
 
       {folders.length > 0 ? (
         <Field label="Folder" htmlFor="folderId" hint="Optional.">
-          <select
-            id="folderId"
-            name="folderId"
-            className="h-11 w-full rounded-control border border-border-strong bg-surface px-3 text-sm text-text"
-            defaultValue=""
-          >
+          <Select id="folderId" name="folderId" defaultValue="">
             <option value="">No folder</option>
             {folders.map((folder) => (
               <option key={folder.id} value={folder.id}>
                 {folder.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
       ) : null}
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Creating…" : "Create deck"}
+      <Button type="submit" loading={isPending}>
+        Create deck
       </Button>
     </form>
   );

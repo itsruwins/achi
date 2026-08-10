@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Logo } from "@/components/shell/logo";
 import { Button } from "@/components/ui/button";
+import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { getSessionUser } from "@/features/auth/queries";
 import { listCards } from "@/features/cards/queries";
 import { resolveShareToken } from "@/features/community/queries";
@@ -35,64 +37,94 @@ export default async function SharedDeckPage({
   const isOwner = user?.id === deck.user_id;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-      <Link href="/" className="text-sm text-muted hover:text-text">
-        Achi
-      </Link>
-
-      <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-text">
-            {deck.emoji ? <span aria-hidden="true">{deck.emoji}</span> : null}
-            {deck.title}
-          </h1>
-          {deck.description ? (
-            <p className="mt-1 text-sm text-muted">{deck.description}</p>
-          ) : null}
-          <p className="mt-2 text-xs text-subtle">
-            {deck.card_count} {deck.card_count === 1 ? "card" : "cards"}
-          </p>
-        </div>
-
-        {user ? (
-          isOwner ? (
-            <Link href={`/decks/${deck.id}`}>
-              <Button variant="secondary">Open in your decks</Button>
-            </Link>
-          ) : (
-            <form action={importSharedDeck}>
-              <input type="hidden" name="deckId" value={deck.id} />
-              <Button type="submit">Save a copy</Button>
-            </form>
-          )
-        ) : (
-          <Link href="/sign-up">
-            <Button>Sign up to save this</Button>
+    <div className="flex min-h-full flex-1 flex-col">
+      <header className="border-b border-border">
+        <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-5">
+          <Link href="/">
+            <Logo />
           </Link>
+          <span className="text-sm text-subtle">Shared deck</span>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-10">
+        <PageHeader
+          title={
+            <span className="flex items-center gap-2.5">
+              {deck.emoji ? (
+                <span
+                  aria-hidden="true"
+                  className="grid size-9 shrink-0 place-items-center rounded-control bg-sunken text-xl leading-none"
+                >
+                  {deck.emoji}
+                </span>
+              ) : null}
+              <span className="min-w-0">{deck.title}</span>
+            </span>
+          }
+          description={deck.description}
+          meta={
+            <span className="tnum">
+              {deck.card_count} {deck.card_count === 1 ? "card" : "cards"}
+            </span>
+          }
+          actions={
+            user ? (
+              isOwner ? (
+                <Link href={`/decks/${deck.id}`}>
+                  <Button variant="secondary">Open in your decks</Button>
+                </Link>
+              ) : (
+                <form action={importSharedDeck}>
+                  <input type="hidden" name="deckId" value={deck.id} />
+                  <Button type="submit">Save a copy</Button>
+                </form>
+              )
+            ) : (
+              <Link href="/sign-up">
+                <Button>Sign up to save this</Button>
+              </Link>
+            )
+          }
+        />
+
+        {cards.length === 0 ? (
+          <EmptyState
+            compact
+            title="This deck has no cards yet"
+            body="Whoever shared it hasn't added any. The link will keep working when they do."
+          />
+        ) : (
+          <ol className="space-y-1.5">
+            {cards.map((card) => (
+              <li
+                key={card.id}
+                className="grid gap-3 rounded-card border border-border bg-surface p-4 sm:grid-cols-2"
+              >
+                <p className="whitespace-pre-wrap break-words text-base text-text">
+                  {card.front}
+                </p>
+                <p className="whitespace-pre-wrap break-words text-base text-muted">
+                  {card.back}
+                </p>
+              </li>
+            ))}
+          </ol>
         )}
-      </div>
 
-      <ol className="mt-8 space-y-2">
-        {cards.map((card) => (
-          <li
-            key={card.id}
-            className="grid gap-3 rounded-card border border-border bg-surface p-4 sm:grid-cols-2"
-          >
-            <p className="whitespace-pre-wrap break-words text-sm text-text">
-              {card.front}
-            </p>
-            <p className="whitespace-pre-wrap break-words text-sm text-muted">
-              {card.back}
-            </p>
-          </li>
-        ))}
-      </ol>
-
-      {cards.length === 0 ? (
-        <p className="mt-8 rounded-card border border-dashed border-border-strong bg-surface p-10 text-center text-sm text-muted">
-          This deck has no cards yet.
-        </p>
-      ) : null}
-    </main>
+        {!user ? (
+          <p className="mt-8 rounded-card border border-border bg-sunken p-4 text-center text-base text-muted">
+            Saving a copy makes it yours to edit, study, and schedule.{" "}
+            <Link
+              href="/sign-up"
+              className="font-medium text-primary underline underline-offset-2"
+            >
+              Create a free account
+            </Link>
+            .
+          </p>
+        ) : null}
+      </main>
+    </div>
   );
 }

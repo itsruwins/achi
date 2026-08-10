@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Field, Textarea } from "@/components/ui/field";
+import { Badge } from "@/components/ui/chip";
+import { Field, Select, Textarea } from "@/components/ui/field";
 import { saveGeneratedDeck } from "@/features/ai/actions";
 import {
   CARD_COUNT_OPTIONS,
@@ -155,37 +156,42 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
     const keptCount = deck.cards.length - dropped.size;
 
     return (
-      <div className="space-y-5">
-        <div className="rounded-card border border-border bg-surface p-5">
-          <p className="text-xs uppercase tracking-wide text-subtle">Preview</p>
-          <h2 className="mt-1 text-lg font-medium text-text">{deck.title}</h2>
-          <p className="mt-0.5 text-sm text-muted">{deck.description}</p>
-          <p className="mt-3 text-xs text-subtle">
-            {keptCount} of {deck.cards.length} cards selected. Uncheck anything
-            you don&rsquo;t want — you can edit the rest after saving.
+      <div className="space-y-4">
+        <div className="rounded-card border border-border bg-surface p-4">
+          <span className="label-data">Draft</span>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-text">
+            {deck.title}
+          </h2>
+          <p className="mt-0.5 text-base text-muted">{deck.description}</p>
+          <p className="mt-3 text-sm text-subtle">
+            <span className="tnum">{keptCount}</span> of{" "}
+            <span className="tnum">{deck.cards.length}</span> cards selected.
+            Uncheck anything you don&rsquo;t want — you can edit the rest after
+            saving.
           </p>
         </div>
 
         {error ? (
           <p
             role="alert"
-            className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+            className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
           >
             {error}
           </p>
         ) : null}
 
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {deck.cards.map((card, index) => {
             const kept = !dropped.has(index);
             return (
               <li key={index}>
                 <label
                   className={cn(
-                    "flex cursor-pointer gap-3 rounded-card border p-4 transition-colors",
+                    "flex cursor-pointer gap-3 rounded-card border p-3.5",
+                    "transition-[background-color,border-color,opacity] duration-[var(--dur-fast)]",
                     kept
-                      ? "border-border bg-surface"
-                      : "border-border bg-bg opacity-55",
+                      ? "border-border bg-surface hover:border-border-strong"
+                      : "border-border bg-sunken opacity-55",
                   )}
                 >
                   <input
@@ -203,12 +209,12 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <p className="text-sm text-text">{card.front}</p>
-                      <p className="text-sm text-muted">{card.back}</p>
+                      <p className="text-base text-text">{card.front}</p>
+                      <p className="text-base text-muted">{card.back}</p>
                     </div>
                     {card.category ? (
-                      <span className="mt-2 inline-block rounded-full bg-primary-subtle px-2 py-0.5 text-xs font-medium text-primary">
-                        {card.category}
+                      <span className="mt-2 inline-block">
+                        <Badge tone="primary">{card.category}</Badge>
                       </span>
                     ) : null}
                   </div>
@@ -218,9 +224,11 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
           })}
         </ul>
 
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={save} disabled={saving || keptCount === 0}>
-            {saving ? "Saving…" : `Save ${keptCount} cards`}
+        {/* Sticky save bar: the list can run to 30 cards, and the action you
+            came for shouldn't be at the bottom of a long scroll. */}
+        <div className="sticky bottom-20 flex flex-wrap gap-2 rounded-card border border-border bg-surface/90 p-2 shadow-raised backdrop-blur-md md:bottom-4">
+          <Button onClick={save} loading={saving} disabled={keptCount === 0}>
+            Save {keptCount} {keptCount === 1 ? "card" : "cards"}
           </Button>
           <Button variant="ghost" onClick={() => setDeck(null)} disabled={saving}>
             Start over
@@ -231,13 +239,19 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-control border border-border p-1">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          role="tablist"
+          aria-label="Source"
+          className="flex gap-0.5 rounded-pill border border-border bg-sunken p-0.5"
+        >
           {(["document", "notes", "topic"] as const).map((value) => (
             <button
               key={value}
               type="button"
+              role="tab"
+              aria-selected={mode === value}
               onClick={() => {
                 setMode(value);
                 setError(null);
@@ -248,9 +262,9 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                 else setFidelity("verbatim");
               }}
               className={cn(
-                "rounded-[7px] px-3 py-1.5 text-sm transition-colors",
+                "rounded-pill px-3 py-1 text-sm transition-colors duration-[var(--dur-fast)]",
                 mode === value
-                  ? "bg-primary-subtle font-medium text-primary"
+                  ? "bg-surface font-medium text-text shadow-sm"
                   : "text-muted hover:text-text",
               )}
             >
@@ -259,15 +273,16 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
           ))}
         </div>
 
-        <p className="text-xs text-subtle">
-          {left} {left === 1 ? "generation" : "generations"} left today
+        <p className="text-sm text-subtle">
+          <span className="tnum">{left}</span>{" "}
+          {left === 1 ? "generation" : "generations"} left today
         </p>
       </div>
 
       {error ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {error}
         </p>
@@ -286,25 +301,27 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
       {mode === "document" && upload ? (
         <div className="rounded-card border border-border bg-surface p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-sm font-medium text-text">{upload.filename}</p>
+            <p className="min-w-0 truncate text-base font-medium text-text">
+              {upload.filename}
+            </p>
             <button
               type="button"
               onClick={() => {
                 setUpload(null);
                 setSource("");
               }}
-              className="text-xs text-muted underline hover:text-text"
+              className="shrink-0 text-sm text-muted underline underline-offset-2 transition-colors hover:text-text"
             >
               Use a different file
             </button>
           </div>
-          <p className="mt-0.5 text-xs text-subtle">
+          <p className="tnum mt-0.5 text-sm text-subtle">
             {upload.pages ? `${upload.pages} pages · ` : ""}
             {source.length.toLocaleString()} characters
             {upload.truncated ? " · trimmed to fit" : ""}
           </p>
           {upload.truncated ? (
-            <p className="mt-2 rounded-control border border-warning bg-warning-subtle px-3 py-2 text-xs text-text">
+            <p className="mt-2 rounded-control border border-warning/40 bg-warning-subtle px-3 py-2 text-sm text-text">
               This file was longer than the limit, so only the first part is
               being used. For the rest, upload the later sections separately.
             </p>
@@ -341,7 +358,7 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                 : "Paste what you're studying…"
             }
           />
-          <p className="text-xs text-subtle">
+          <p className="tnum text-sm text-subtle">
             {source.length.toLocaleString()} characters
             {needsChunking
               ? ` — over the ${sourceLimit.toLocaleString()} per-pass limit, so this runs in ${parts.length} passes.`
@@ -352,7 +369,9 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
 
       {mode !== "topic" ? (
         <fieldset className="rounded-card border border-border bg-surface p-4">
-          <legend className="px-1 text-sm font-medium text-text">Wording</legend>
+          <legend className="px-1 text-md font-semibold tracking-tight text-text">
+            Wording
+          </legend>
           <div className="mt-2 space-y-1.5">
             {(
               [
@@ -371,9 +390,10 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
               <label
                 key={option.value}
                 className={cn(
-                  "flex cursor-pointer gap-2.5 rounded-control border px-3 py-2 transition-colors",
+                  "flex cursor-pointer gap-2.5 rounded-control border px-3 py-2",
+                  "transition-[background-color,border-color] duration-[var(--dur-fast)]",
                   fidelity === option.value
-                    ? "border-primary bg-primary-subtle"
+                    ? "border-primary-border bg-primary-subtle"
                     : "border-border hover:border-border-strong",
                 )}
               >
@@ -386,13 +406,20 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
                   className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm text-text">{option.label}</span>
-                  <span className="block text-xs text-muted">{option.note}</span>
+                  <span
+                    className={cn(
+                      "block text-base font-medium",
+                      fidelity === option.value ? "text-primary" : "text-text",
+                    )}
+                  >
+                    {option.label}
+                  </span>
+                  <span className="block text-sm text-muted">{option.note}</span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-2 px-1 text-xs text-subtle">
+          <p className="mt-2 px-1 text-sm text-subtle">
             Questions are always written fresh — your material states facts, it
             doesn&rsquo;t ask them. Exact wording applies to the answers.
           </p>
@@ -400,16 +427,16 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
       ) : null}
 
       {needsChunking && !generating ? (
-        <div className="rounded-card border border-border bg-surface p-4">
-          <p className="text-sm font-medium text-text">
+        <div className="rounded-card border border-info/30 bg-info-subtle p-4">
+          <p className="text-base font-medium text-info">
             This is longer than one request allows
           </p>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-base text-muted">
             It&rsquo;ll be split into <strong>{parts.length} passes</strong> of
             up to {sourceLimit.toLocaleString()} characters, then merged into
             one deck with duplicate questions removed.
           </p>
-          <ul className="mt-2 space-y-0.5 text-xs text-subtle">
+          <ul className="mt-2 space-y-0.5 text-sm text-subtle">
             <li>
               Takes about {Math.ceil(((parts.length - 1) * 62 + parts.length * 4) / 60)}{" "}
               minutes — the free API key needs a minute between passes.
@@ -427,19 +454,19 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
           role="status"
           className="rounded-card border border-border bg-surface p-4"
         >
-          <div className="flex items-baseline justify-between gap-2 text-sm">
+          <div className="flex items-baseline justify-between gap-2 text-base">
             <span className="text-text">
               {progress.waiting
                 ? "Waiting for the rate limit to clear…"
                 : `Writing pass ${progress.done + 1} of ${progress.total}`}
             </span>
-            <span className="tabular-nums text-subtle">
+            <span className="tnum text-subtle">
               {progress.done}/{progress.total}
             </span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+          <div className="mt-2 h-1 overflow-hidden rounded-pill bg-border">
             <div
-              className="h-full rounded-full bg-primary transition-all"
+              className="h-full rounded-pill bg-primary transition-[width] duration-[var(--dur-slow)] ease-[var(--ease-out)]"
               style={{ width: `${(progress.done / progress.total) * 100}%` }}
             />
           </div>
@@ -448,25 +475,33 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <label htmlFor="cardCount" className="block text-sm font-medium text-text">
+          <label
+            htmlFor="cardCount"
+            className="block text-base font-medium text-text"
+          >
             How many cards
           </label>
-          <select
-            id="cardCount"
-            value={cardCount}
-            onChange={(event) => setCardCount(Number(event.target.value))}
-            className="mt-1.5 h-11 rounded-control border border-border-strong bg-surface px-3 text-sm text-text"
-          >
-            {CARD_COUNT_OPTIONS.map((count) => (
-              <option key={count} value={count}>
-                Up to {count}
-              </option>
-            ))}
-          </select>
+          <div className="mt-1.5 w-36">
+            <Select
+              id="cardCount"
+              value={cardCount}
+              onChange={(event) => setCardCount(Number(event.target.value))}
+            >
+              {CARD_COUNT_OPTIONS.map((count) => (
+                <option key={count} value={count}>
+                  Up to {count}
+                </option>
+              ))}
+            </Select>
+          </div>
         </div>
 
+        {/* Deliberately not the Button's `loading` state: that hides the label,
+            and the label is the only place the pass count is reported. */}
         <Button
+          size="lg"
           onClick={generate}
+          aria-busy={generating || undefined}
           disabled={generating || outOfQuota || source.trim().length < 3}
         >
           {generating
@@ -483,7 +518,7 @@ export function GeneratePanel({ remaining }: { remaining: number }) {
         </Button>
       </div>
 
-      <p className="text-xs text-subtle">
+      <p className="text-sm text-subtle">
         Cards are drafted by AI and can be wrong. Check anything you&rsquo;d be
         marked down for. Your text is sent to Groq to generate the cards and
         isn&rsquo;t stored by Achi.

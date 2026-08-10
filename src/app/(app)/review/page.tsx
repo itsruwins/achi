@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { FilterChip } from "@/components/ui/chip";
+import { CheckIcon, ReviewIcon } from "@/components/ui/icons";
+import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { syncEnrolledSchedules } from "@/features/srs/actions";
 import { ReviewSession } from "@/features/srs/components/review-session";
@@ -36,114 +39,84 @@ export default async function ReviewPage({
 
   if (enrolled.length === 0) {
     return (
-      <EmptyReview
-        title="No decks in review yet"
-        body="Open a deck and turn on review to start scheduling its cards."
-      />
+      <div>
+        <PageHeader title="Review" />
+        <EmptyState
+          icon={<ReviewIcon className="size-5" />}
+          title="No decks in review yet"
+          body="Review schedules each card for the day you're about to forget it. Open a deck and switch review on to start."
+          action={
+            <Link href="/decks">
+              <Button>Pick a deck</Button>
+            </Link>
+          }
+        />
+      </div>
     );
   }
+
+  const filtered = categories.length > 0 || Boolean(deckId);
 
   if (due.length === 0) {
     return (
-      <EmptyReview
-        title="Nothing due today"
-        body={
-          categories.length > 0 || deckId
-            ? "Nothing due with those filters. Try clearing them."
-            : "You're caught up. New cards appear here as their intervals come round."
-        }
-        showClear={categories.length > 0 || Boolean(deckId)}
-      />
+      <div>
+        <PageHeader title="Review" />
+        <EmptyState
+          icon={<CheckIcon className="size-5 text-success" />}
+          title={filtered ? "Nothing due with those filters" : "Nothing due today"}
+          body={
+            filtered
+              ? "Cards may still be waiting under a different topic or deck."
+              : "You're caught up. Cards reappear here as their intervals come round — usually a few each day once a deck gets going."
+          }
+          action={
+            <>
+              {filtered ? (
+                <Link href="/review">
+                  <Button>Clear filters</Button>
+                </Link>
+              ) : null}
+              <Link href="/study">
+                <Button variant={filtered ? "secondary" : "primary"}>
+                  Free-study instead
+                </Button>
+              </Link>
+            </>
+          }
+        />
+      </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-text">
-          Review
-        </h1>
-        <p className="text-sm text-muted">
-          {due.length} due{deckId ? " in this deck" : ""}
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        title="Review"
+        meta={
+          <span className="tnum">
+            {due.length} due{deckId ? " in this deck" : ""}
+          </span>
+        }
+      />
 
       {dueCategories.length > 1 && !deckId ? (
-        <TopicFilter
-          categories={dueCategories}
-          selected={categories}
-        />
+        <div className="mb-5 flex flex-wrap items-center gap-1.5">
+          <FilterChip href="/review" active={categories.length === 0}>
+            All topics
+          </FilterChip>
+          {dueCategories.map((category) => (
+            <FilterChip
+              key={category}
+              href={`/review?category=${encodeURIComponent(category)}`}
+              active={categories.includes(category)}
+            >
+              {category}
+            </FilterChip>
+          ))}
+        </div>
       ) : null}
 
       <ReviewSession cards={due} />
-    </div>
-  );
-}
-
-function TopicFilter({
-  categories,
-  selected,
-}: {
-  categories: string[];
-  selected: string[];
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Link
-        href="/review"
-        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-          selected.length === 0
-            ? "border-primary bg-primary-subtle font-medium text-primary"
-            : "border-border text-muted hover:border-border-strong"
-        }`}
-      >
-        All topics
-      </Link>
-      {categories.map((category) => {
-        const active = selected.includes(category);
-        return (
-          <Link
-            key={category}
-            href={`/review?category=${encodeURIComponent(category)}`}
-            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-              active
-                ? "border-primary bg-primary-subtle font-medium text-primary"
-                : "border-border text-muted hover:border-border-strong"
-            }`}
-          >
-            {category}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
-function EmptyReview({
-  title,
-  body,
-  showClear,
-}: {
-  title: string;
-  body: string;
-  showClear?: boolean;
-}) {
-  return (
-    <div className="mx-auto max-w-md rounded-card border border-dashed border-border-strong bg-surface p-12 text-center">
-      <p className="text-sm font-medium text-text">{title}</p>
-      <p className="mt-1 text-sm text-muted">{body}</p>
-      <div className="mt-6 flex justify-center gap-2">
-        {showClear ? (
-          <Link href="/review">
-            <Button variant="secondary">Clear filters</Button>
-          </Link>
-        ) : null}
-        <Link href="/decks">
-          <Button variant={showClear ? "ghost" : "secondary"}>
-            Back to decks
-          </Button>
-        </Link>
-      </div>
     </div>
   );
 }

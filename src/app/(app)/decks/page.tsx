@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { DecksIcon, ImportIcon, PlusIcon } from "@/components/ui/icons";
+import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { DeckTile } from "@/features/decks/components/deck-tile";
 import { listDecks } from "@/features/decks/queries";
 import { FolderBar } from "@/features/folders/components/folder-bar";
 import { listFolders } from "@/features/folders/queries";
+import { countDueByDeck } from "@/features/srs/queries";
 
 export const metadata: Metadata = { title: "Your decks" };
 
@@ -17,28 +20,49 @@ export default async function DecksPage({ searchParams }: PageProps<"/decks">) {
   const folderId = typeof params.folder === "string" ? params.folder : undefined;
   const errorMessage = typeof params.error === "string" ? params.error : undefined;
 
-  const [decks, folders] = await Promise.all([
+  const [decks, folders, dueByDeck] = await Promise.all([
     listDecks(user.id, { folderId }),
     listFolders(user.id),
+    countDueByDeck(user.id),
   ]);
 
   const activeFolder = folders.find((folder) => folder.id === folderId);
+  const totalCards = decks.reduce((sum, deck) => sum + deck.card_count, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-text">
-          {activeFolder ? activeFolder.name : "Your decks"}
-        </h1>
-        <Link href="/decks/new">
-          <Button>New deck</Button>
-        </Link>
-      </div>
+    <div>
+      <PageHeader
+        title={activeFolder ? activeFolder.name : "Your decks"}
+        meta={
+          decks.length > 0 ? (
+            <span className="tnum">
+              {decks.length} {decks.length === 1 ? "deck" : "decks"} ·{" "}
+              {totalCards} {totalCards === 1 ? "card" : "cards"}
+            </span>
+          ) : null
+        }
+        actions={
+          <>
+            <Link href="/decks/new?with=import">
+              <Button variant="secondary">
+                <ImportIcon className="size-4" />
+                Import
+              </Button>
+            </Link>
+            <Link href="/decks/new">
+              <Button>
+                <PlusIcon className="size-4" />
+                New deck
+              </Button>
+            </Link>
+          </>
+        }
+      />
 
       {errorMessage ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="mb-5 rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {errorMessage}
         </p>
@@ -46,28 +70,41 @@ export default async function DecksPage({ searchParams }: PageProps<"/decks">) {
 
       <FolderBar folders={folders} activeFolderId={folderId} />
 
-      {decks.length === 0 ? (
-        <div className="rounded-card border border-dashed border-border-strong bg-surface p-12 text-center">
-          <p className="text-sm font-medium text-text">
-            {activeFolder ? "Nothing in this folder yet" : "No decks yet"}
-          </p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-muted">
-            A deck is a set of cards on one topic. Make one and start adding
-            cards.
-          </p>
-          <Link href="/decks/new" className="mt-5 inline-block">
-            <Button>Create your first deck</Button>
-          </Link>
-        </div>
-      ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {decks.map((deck) => (
-            <li key={deck.id}>
-              <DeckTile deck={deck} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="mt-5">
+        {decks.length === 0 ? (
+          <EmptyState
+            icon={<DecksIcon className="size-5" />}
+            title={
+              activeFolder
+                ? `Nothing in ${activeFolder.name} yet`
+                : "Start with one deck"
+            }
+            body={
+              activeFolder
+                ? "Move a deck into this folder from its settings, or make a new one here."
+                : "A deck is a set of cards on one topic. Write them yourself, paste your notes and let AI draft them, or bring a file you already have."
+            }
+            action={
+              <>
+                <Link href="/decks/new">
+                  <Button>Create a deck</Button>
+                </Link>
+                <Link href="/decks/new?with=import">
+                  <Button variant="secondary">Import a file</Button>
+                </Link>
+              </>
+            }
+          />
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {decks.map((deck) => (
+              <li key={deck.id}>
+                <DeckTile deck={deck} due={dueByDeck[deck.id]} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

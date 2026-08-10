@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ImportIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 
 export type ExtractedFile = {
@@ -71,10 +72,11 @@ export function FileDrop({
           if (file) void upload(file);
         }}
         className={cn(
-          "rounded-card border-2 border-dashed p-8 text-center transition-colors",
+          "rounded-card border border-dashed p-8 text-center",
+          "transition-[background-color,border-color] duration-[var(--dur-fast)]",
           dragging
             ? "border-primary bg-primary-subtle"
-            : "border-border-strong bg-surface",
+            : "border-border-strong bg-surface/60",
         )}
       >
         <input
@@ -90,10 +92,24 @@ export function FileDrop({
           }}
         />
 
-        <p className="text-sm text-text">
-          {busy ? "Reading your file…" : "Drop a file here"}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "mx-auto mb-3 grid size-10 place-items-center rounded-pill transition-colors duration-[var(--dur-fast)]",
+            dragging ? "bg-primary text-primary-fg" : "bg-sunken text-muted",
+          )}
+        >
+          <ImportIcon className="size-5" />
+        </span>
+
+        <p className="text-md font-medium text-text">
+          {busy
+            ? "Reading your file…"
+            : dragging
+              ? "Drop to read it"
+              : "Drop a file here"}
         </p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           PDF, Word, PowerPoint, or plain text — up to 20 MB
         </p>
 
@@ -101,23 +117,24 @@ export function FileDrop({
           variant="secondary"
           size="sm"
           className="mt-4"
-          disabled={busy || disabled}
+          loading={busy}
+          disabled={disabled}
           onClick={() => inputRef.current?.click()}
         >
-          {busy ? "Reading…" : "Choose file"}
+          Choose file
         </Button>
       </div>
 
       {error ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {error}
         </p>
       ) : null}
 
-      <p className="text-xs text-subtle">
+      <p className="text-sm text-subtle">
         Scanned pages and photos of slides have no text layer, so nothing can be
         read from them without OCR.
       </p>

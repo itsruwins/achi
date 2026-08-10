@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { themeBootstrapScript } from "@/components/shell/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,8 +25,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf9f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#14120f" },
+    { media: "(prefers-color-scheme: light)", color: "#f7faf9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1212" },
   ],
 };
 
@@ -33,7 +35,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // The bootstrap script writes data-theme before React sees the document,
+      // so the server HTML and the first client render disagree by design.
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

@@ -1,218 +1,298 @@
 @import "tailwindcss";
 
-/* ---------------------------------------------------------------------------
-   Design tokens.
+/* ═══════════════════════════════════════════════════════════════════════════
+   Achi design tokens
 
    Tailwind v4 is CSS-first — there is no tailwind.config.ts. Raw values live on
-   :root, and the @theme inline block below maps them into Tailwind utilities
-   (bg-surface, text-muted, rounded-card, …).
+   :root, and the @theme inline block maps them into utilities.
+
+   Neutrals are cool, tinted ~0.006 chroma toward the jade primary. The warm
+   cream this used to sit on is the single most over-used ground in current
+   product design, and it fights the accent rather than supporting it.
 
    Theming has three states: an explicit choice stamps data-theme on <html>,
    and the default "system" setting falls through to prefers-color-scheme.
-   Every token gets its light value on bare :root so nothing is defined only
+   Every token gets its light value on bare :root, so nothing is defined only
    inside a media query.
---------------------------------------------------------------------------- */
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
   color-scheme: light;
 
-  /* Surfaces — warm paper rather than clinical white */
-  --bg: #fbf9f5;
-  --surface: #ffffff;
-  --surface-raised: #ffffff;
-  --overlay: rgb(28 25 23 / 0.45);
+  /* ── Surfaces ────────────────────────────────────────────────────────────
+     Three layers, not two. `sunken` is the second neutral the app bar and
+     toolbars sit on, so chrome reads as behind the content rather than beside
+     it. Without it every panel is the same plane and nothing has depth. */
+  --bg: oklch(0.983 0.004 180);
+  --surface: oklch(1 0 0);
+  --surface-sunken: oklch(0.962 0.005 180);
+  --surface-raised: oklch(1 0 0);
+  --overlay: oklch(0.22 0.01 195 / 0.5);
 
-  /* Text */
-  --text: #1c1917;
-  --text-muted: #57534e;
-  --text-subtle: #8b857f;
+  /* ── Ink ─────────────────────────────────────────────────────────────────
+     `muted` is body-weight text and clears 4.5:1. `subtle` is for text that
+     is genuinely optional — counts, hints, timestamps — and never carries a
+     sentence the user needs. */
+  --text: oklch(0.24 0.012 195);
+  --text-muted: oklch(0.45 0.011 195);
+  --text-subtle: oklch(0.54 0.009 195);
+  --text-inverse: oklch(0.99 0 0);
 
-  /* Lines */
-  --border: #e8e2d9;
-  --border-strong: #d6cec2;
+  /* ── Lines ───────────────────────────────────────────────────────────────── */
+  --border: oklch(0.918 0.005 180);
+  --border-strong: oklch(0.855 0.007 180);
 
-  /* Brand — jade */
-  --primary: #0f7a63;
-  --primary-hover: #0c6552;
-  --primary-fg: #ffffff;
-  --primary-subtle: #e3f2ed;
+  /* ── Primary: jade ───────────────────────────────────────────────────────
+     Reserved for primary actions, current selection, and state. Not
+     decoration — an accent that appears everywhere stops meaning anything. */
+  --primary: oklch(0.525 0.100 172);
+  --primary-hover: oklch(0.485 0.103 172);
+  --primary-active: oklch(0.435 0.098 172);
+  --primary-fg: oklch(0.99 0 0);
+  --primary-subtle: oklch(0.955 0.028 172);
+  --primary-border: oklch(0.87 0.055 172);
 
-  /* Accent — warm amber, for streaks and highlights */
-  --accent: #c2740c;
-  --accent-subtle: #fbf0dc;
+  /* ── Accent: amber. Streaks and earned moments only. ─────────────────────── */
+  --accent: oklch(0.548 0.125 62);
+  --accent-subtle: oklch(0.962 0.038 75);
+  --accent-border: oklch(0.87 0.08 70);
 
-  /* Semantic — also used by the four SRS rating buttons */
-  --success: #2f7d55;
-  --success-subtle: #e4f2ea;
-  --warning: #b0730a;
-  --warning-subtle: #fbf0dc;
-  --danger: #b4402f;
-  --danger-subtle: #fbe9e6;
-  --info: #2b6cb0;
-  --info-subtle: #e6eff8;
+  /* ── Semantic. Also the four SRS ratings. ────────────────────────────────── */
+  --success: oklch(0.528 0.100 158);
+  --success-subtle: oklch(0.958 0.03 158);
+  --warning: oklch(0.544 0.110 75);
+  --warning-subtle: oklch(0.962 0.038 75);
+  --danger: oklch(0.535 0.14 25);
+  --danger-fg: oklch(0.99 0 0);
+  --danger-subtle: oklch(0.962 0.028 25);
+  --info: oklch(0.535 0.100 245);
+  --info-subtle: oklch(0.958 0.028 245);
 
-  --focus: var(--primary);
+  /* ── Interaction states ──────────────────────────────────────────────────
+     Named once so every control shares them. Half-defined state vocabulary is
+     how two buttons on the same screen end up behaving differently. */
+  --hover-wash: oklch(0.24 0.012 195 / 0.045);
+  --active-wash: oklch(0.24 0.012 195 / 0.08);
+  /* Placeholder fill. Steps *away* from the surface in each theme — darker on
+     light, lighter on dark — so a skeleton never reads as a hole in the card. */
+  --skeleton-base: oklch(0.935 0.005 180);
+  --skeleton-sheen: oklch(0.965 0.004 180);
+  --selected-wash: var(--primary-subtle);
+  --disabled-opacity: 0.45;
+  --focus-ring: var(--primary);
 
-  /*
-    Chart colors. Separate from the UI palette because they answer to different
-    rules: --primary is tuned to look right as a button, and measures slightly
-    under the chroma floor a data mark needs to read as data rather than chrome.
-    Every value below was checked with the palette validator (lightness band,
-    chroma floor, monotone steps, contrast vs surface) rather than picked by eye.
-
-    --viz-mark  single-series marks (forecast bars). One colour for every bar —
-                shading bars by their own value would re-encode bar length as
-                hue and spend the identity channel on nothing.
-    --viz-1..4  one ordered ramp, used for magnitude (activity heatmap) and for
-                ordered buckets (card maturity). Always low → high.
-  */
-  --viz-mark: #0a8a6c;
-  --viz-1: #74c1ad;
-  --viz-2: #3fa88d;
-  --viz-3: #17876d;
-  --viz-4: #0a5343;
-  --viz-empty: #ece8e1;
-
-  /* Radii */
+  /* ── Radii ───────────────────────────────────────────────────────────────── */
   --radius-control: 0.625rem;
-  --radius-card: 1rem;
-  --radius-modal: 1.25rem;
+  --radius-card: 0.875rem;
+  --radius-modal: 1.125rem;
+  --radius-pill: 999px;
 
-  /* Elevation */
-  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.04), 0 2px 8px rgb(28 25 23 / 0.04);
-  --shadow-raised: 0 2px 4px rgb(28 25 23 / 0.05), 0 8px 24px rgb(28 25 23 / 0.08);
-  --shadow-modal: 0 8px 12px rgb(28 25 23 / 0.08), 0 24px 48px rgb(28 25 23 / 0.14);
+  /* ── Elevation ───────────────────────────────────────────────────────────
+     Tinted toward the neutral hue rather than pure black, so shadows sit in
+     the same light as the surfaces. */
+  --shadow-sm: 0 1px 2px oklch(0.24 0.012 195 / 0.05);
+  --shadow-card: 0 1px 2px oklch(0.24 0.012 195 / 0.04),
+    0 2px 6px oklch(0.24 0.012 195 / 0.035);
+  --shadow-raised: 0 2px 4px oklch(0.24 0.012 195 / 0.05),
+    0 8px 20px oklch(0.24 0.012 195 / 0.07);
+  --shadow-modal: 0 8px 16px oklch(0.24 0.012 195 / 0.08),
+    0 24px 48px oklch(0.24 0.012 195 / 0.14);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     Product pace: fast enough to feel like the UI responded, never long
+     enough to wait through. Exponential ease-out only — no bounce. */
+  --dur-fast: 120ms;
+  --dur: 170ms;
+  --dur-slow: 260ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ── Stacking. Semantic, so nobody reaches for 9999. ─────────────────────── */
+  --z-dropdown: 20;
+  --z-sticky: 30;
+  --z-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
 }
 
-/* Dark: system preference, unless an explicit light choice overrides it. */
+/* Dark: designed, not inverted. Half of studying happens at night, and an
+   inverted light theme reads as glare with the values flipped. Surfaces step
+   *up* in lightness toward the viewer; borders stay low-contrast so the grid
+   doesn't glow. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --bg: #14120f;
-    --surface: #1e1b17;
-    --surface-raised: #262119;
-    --overlay: rgb(0 0 0 / 0.6);
+    --bg: oklch(0.178 0.008 195);
+    --surface: oklch(0.218 0.009 195);
+    --surface-sunken: oklch(0.196 0.008 195);
+    --surface-raised: oklch(0.252 0.010 195);
+    --overlay: oklch(0.12 0.006 195 / 0.65);
 
-    --text: #f5f1ea;
-    --text-muted: #b8b0a5;
-    --text-subtle: #8a8177;
+    --text: oklch(0.955 0.004 180);
+    --text-muted: oklch(0.775 0.010 185);
+    --text-subtle: oklch(0.635 0.010 190);
+    --text-inverse: oklch(0.17 0.008 195);
 
-    --border: #322c25;
-    --border-strong: #453d33;
+    --border: oklch(0.295 0.010 195);
+    --border-strong: oklch(0.375 0.012 195);
 
-    --primary: #3fb795;
-    --primary-hover: #55c9a8;
-    --primary-fg: #07231c;
-    --primary-subtle: #10312a;
+    --primary: oklch(0.735 0.115 172);
+    --primary-hover: oklch(0.795 0.11 172);
+    --primary-active: oklch(0.685 0.115 172);
+    --primary-fg: oklch(0.17 0.03 172);
+    --primary-subtle: oklch(0.285 0.045 172);
+    --primary-border: oklch(0.40 0.07 172);
 
-    --accent: #e0a341;
-    --accent-subtle: #33270f;
+    --accent: oklch(0.775 0.125 72);
+    --accent-subtle: oklch(0.285 0.045 68);
+    --accent-border: oklch(0.40 0.07 70);
 
-    --success: #4fb37f;
-    --success-subtle: #12291d;
-    --warning: #d9a03f;
-    --warning-subtle: #2e2410;
-    --danger: #e0705c;
-    --danger-subtle: #331a16;
-    --info: #6fa8dc;
-    --info-subtle: #14212e;
+    --success: oklch(0.735 0.12 158);
+    --success-subtle: oklch(0.275 0.045 158);
+    --warning: oklch(0.785 0.115 75);
+    --warning-subtle: oklch(0.285 0.045 75);
+    --danger: oklch(0.685 0.145 25);
+    --danger-fg: oklch(0.17 0.04 25);
+    --danger-subtle: oklch(0.295 0.055 25);
+    --info: oklch(0.715 0.105 245);
+    --info-subtle: oklch(0.285 0.045 245);
 
-    --viz-mark: #34ab8b;
-    --viz-1: #177a63;
-    --viz-2: #2f9d82;
-    --viz-3: #5cbfa4;
-    --viz-4: #8fd6c1;
-    --viz-empty: #2a2620;
+    --hover-wash: oklch(0.99 0 0 / 0.055);
+    --active-wash: oklch(0.99 0 0 / 0.095);
+    --skeleton-base: oklch(0.275 0.010 195);
+    --skeleton-sheen: oklch(0.325 0.011 195);
 
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
-    --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.35);
-    --shadow-modal: 0 8px 12px rgb(0 0 0 / 0.4), 0 24px 48px rgb(0 0 0 / 0.5);
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+    --shadow-card: 0 1px 2px oklch(0 0 0 / 0.35), 0 2px 6px oklch(0 0 0 / 0.3);
+    --shadow-raised: 0 2px 4px oklch(0 0 0 / 0.4), 0 8px 20px oklch(0 0 0 / 0.42);
+    --shadow-modal: 0 8px 16px oklch(0 0 0 / 0.45), 0 24px 48px oklch(0 0 0 / 0.55);
   }
 }
 
-/* Dark: explicit choice wins in both directions. */
+/* Explicit choice wins in both directions. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #14120f;
-  --surface: #1e1b17;
-  --surface-raised: #262119;
-  --overlay: rgb(0 0 0 / 0.6);
+  --bg: oklch(0.178 0.008 195);
+  --surface: oklch(0.218 0.009 195);
+  --surface-sunken: oklch(0.196 0.008 195);
+  --surface-raised: oklch(0.252 0.010 195);
+  --overlay: oklch(0.12 0.006 195 / 0.65);
 
-  --text: #f5f1ea;
-  --text-muted: #b8b0a5;
-  --text-subtle: #8a8177;
+  --text: oklch(0.955 0.004 180);
+  --text-muted: oklch(0.775 0.010 185);
+  --text-subtle: oklch(0.635 0.010 190);
+  --text-inverse: oklch(0.17 0.008 195);
 
-  --border: #322c25;
-  --border-strong: #453d33;
+  --border: oklch(0.295 0.010 195);
+  --border-strong: oklch(0.375 0.012 195);
 
-  --primary: #3fb795;
-  --primary-hover: #55c9a8;
-  --primary-fg: #07231c;
-  --primary-subtle: #10312a;
+  --primary: oklch(0.735 0.115 172);
+  --primary-hover: oklch(0.795 0.11 172);
+  --primary-active: oklch(0.685 0.115 172);
+  --primary-fg: oklch(0.17 0.03 172);
+  --primary-subtle: oklch(0.285 0.045 172);
+  --primary-border: oklch(0.40 0.07 172);
 
-  --accent: #e0a341;
-  --accent-subtle: #33270f;
+  --accent: oklch(0.775 0.125 72);
+  --accent-subtle: oklch(0.285 0.045 68);
+  --accent-border: oklch(0.40 0.07 70);
 
-  --success: #4fb37f;
-  --success-subtle: #12291d;
-  --warning: #d9a03f;
-  --warning-subtle: #2e2410;
-  --danger: #e0705c;
-  --danger-subtle: #331a16;
-  --info: #6fa8dc;
-  --info-subtle: #14212e;
+  --success: oklch(0.735 0.12 158);
+  --success-subtle: oklch(0.275 0.045 158);
+  --warning: oklch(0.785 0.115 75);
+  --warning-subtle: oklch(0.285 0.045 75);
+  --danger: oklch(0.685 0.145 25);
+  --danger-fg: oklch(0.17 0.04 25);
+  --danger-subtle: oklch(0.295 0.055 25);
+  --info: oklch(0.715 0.105 245);
+  --info-subtle: oklch(0.285 0.045 245);
 
-  --viz-mark: #34ab8b;
-  --viz-1: #177a63;
-  --viz-2: #2f9d82;
-  --viz-3: #5cbfa4;
-  --viz-4: #8fd6c1;
-  --viz-empty: #2a2620;
+  --hover-wash: oklch(0.99 0 0 / 0.055);
+  --active-wash: oklch(0.99 0 0 / 0.095);
+  --skeleton-base: oklch(0.275 0.010 195);
+  --skeleton-sheen: oklch(0.325 0.011 195);
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
-  --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.35);
-  --shadow-modal: 0 8px 12px rgb(0 0 0 / 0.4), 0 24px 48px rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.35), 0 2px 6px oklch(0 0 0 / 0.3);
+  --shadow-raised: 0 2px 4px oklch(0 0 0 / 0.4), 0 8px 20px oklch(0 0 0 / 0.42);
+  --shadow-modal: 0 8px 16px oklch(0 0 0 / 0.45), 0 24px 48px oklch(0 0 0 / 0.55);
+}
+
+/* ── Chart colors ──────────────────────────────────────────────────────────
+   Kept separate from the UI palette: a data mark answers to different rules
+   than a button. Validated for lightness band, chroma floor, monotone steps,
+   and contrast against each mode's surface. The dark ramp is not the light
+   one inverted — on a dark ground "more" has to read as lighter, so the
+   anchor flips. */
+:root {
+  --viz-mark: oklch(0.60 0.115 170);
+  --viz-1: oklch(0.80 0.055 172);
+  --viz-2: oklch(0.715 0.085 171);
+  --viz-3: oklch(0.605 0.105 170);
+  --viz-4: oklch(0.435 0.085 170);
+  --viz-empty: oklch(0.935 0.005 180);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --viz-mark: oklch(0.72 0.115 170);
+    --viz-1: oklch(0.42 0.08 170);
+    --viz-2: oklch(0.56 0.10 170);
+    --viz-3: oklch(0.695 0.105 171);
+    --viz-4: oklch(0.845 0.075 172);
+    --viz-empty: oklch(0.26 0.008 195);
+  }
+}
+
+:root[data-theme="dark"] {
+  --viz-mark: oklch(0.72 0.115 170);
+  --viz-1: oklch(0.42 0.08 170);
+  --viz-2: oklch(0.56 0.10 170);
+  --viz-3: oklch(0.695 0.105 171);
+  --viz-4: oklch(0.845 0.075 172);
+  --viz-empty: oklch(0.26 0.008 195);
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
+  --color-sunken: var(--surface-sunken);
+  --color-raised: var(--surface-raised);
   --color-overlay: var(--overlay);
 
   --color-text: var(--text);
   --color-muted: var(--text-muted);
   --color-subtle: var(--text-subtle);
+  --color-inverse: var(--text-inverse);
 
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
   --color-primary-fg: var(--primary-fg);
   --color-primary-subtle: var(--primary-subtle);
+  --color-primary-border: var(--primary-border);
 
   --color-accent: var(--accent);
   --color-accent-subtle: var(--accent-subtle);
+  --color-accent-border: var(--accent-border);
 
   --color-success: var(--success);
   --color-success-subtle: var(--success-subtle);
   --color-warning: var(--warning);
   --color-warning-subtle: var(--warning-subtle);
   --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
   --color-danger-subtle: var(--danger-subtle);
   --color-info: var(--info);
   --color-info-subtle: var(--info-subtle);
 
-  --radius-control: var(--radius-control);
-  --radius-card: var(--radius-card);
-  --radius-modal: var(--radius-modal);
-
-  --shadow-card: var(--shadow-card);
-  --shadow-raised: var(--shadow-raised);
-  --shadow-modal: var(--shadow-modal);
+  --color-hover-wash: var(--hover-wash);
+  --color-active-wash: var(--active-wash);
 
   --color-viz-mark: var(--viz-mark);
   --color-viz-1: var(--viz-1);
@@ -221,21 +301,126 @@
   --color-viz-4: var(--viz-4);
   --color-viz-empty: var(--viz-empty);
 
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-modal: var(--radius-modal);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-modal: var(--shadow-modal);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Fixed rem scale, not fluid. Product UI is viewed at consistent DPI, and a
+     clamp()-sized heading that shrinks inside a panel looks broken, not
+     responsive. Ratio ~1.15 — tight, because there are many type roles here
+     and exaggerated contrast reads as noise. */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  --ease-out-quart: var(--ease-out);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* A single visible focus treatment, so keyboard users aren't guessing. */
+/* Headings pull tighter than body; balance keeps two-line titles even. */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* One focus treatment for the whole app. Keyboard users should never have to
+   guess where they are. */
 :focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 3px;
+}
+
+/* Numeric UI — counts, timers, progress — uses tabular figures so values stop
+   shifting horizontally as they tick. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Data label: mono, for values and technical hints only. Deliberately NOT used
+   as a kicker above section headings — an eyebrow over every section is
+   scaffolding, not voice. */
+.label-data {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+@keyframes achi-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes achi-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes achi-shimmer {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeletons, not spinners: a spinner in the middle of content tells you to
+   wait; a skeleton tells you what is arriving. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 0%,
+    var(--skeleton-sheen) 50%,
+    var(--skeleton-base) 100%
+  );
+  background-size: 200% 100%;
+  animation: achi-shimmer 1.4s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -246,5 +431,10 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .skeleton {
+    animation: none;
+    background: var(--skeleton-base);
   }
 }

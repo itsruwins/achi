@@ -12,10 +12,10 @@ export default function SignUpPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-text">
+        <h1 className="text-xl font-semibold tracking-tight text-text">
           Create your account
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-base text-muted">
           Free, and your decks sync everywhere.
         </p>
       </div>
@@ -25,9 +25,7 @@ export default function SignUpPage() {
           <GoogleButton />
           <div className="flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-xs uppercase tracking-wide text-subtle">
-              or
-            </span>
+<span className="text-sm text-subtle">or</span>
             <span className="h-px flex-1 bg-border" />
           </div>
         </>
@@ -35,9 +33,9 @@ export default function SignUpPage() {
 
       <CredentialsForm action={signUp} mode="sign-up" />
 
-      <p className="text-center text-sm text-muted">
+      <p className="text-center text-base text-muted">
         Already have an account?{" "}
-        <Link href="/sign-in" className="font-medium text-primary underline">
+        <Link href="/sign-in" className="font-medium text-primary underline underline-offset-2 transition-colors hover:text-primary-hover">
           Sign in
         </Link>
       </p>

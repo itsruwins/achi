@@ -81,10 +81,10 @@ export function ImageField({ name, label, userId, defaultValue }: Props) {
         <Button
           size="sm"
           variant="secondary"
-          disabled={uploading}
+          loading={uploading}
           onClick={() => inputRef.current?.click()}
         >
-          {uploading ? "Uploading…" : url ? `Replace ${label}` : `Add ${label}`}
+          {url ? `Replace ${label}` : `Add ${label}`}
         </Button>
 
         {url ? (
@@ -101,7 +101,11 @@ export function ImageField({ name, label, userId, defaultValue }: Props) {
         ) : null}
       </div>
 
-      {error ? <p className="text-xs text-danger">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
 
       {url ? (
         // Plain <img>: these are arbitrary user uploads on a Supabase domain,

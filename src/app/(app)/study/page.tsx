@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { Choice, Select } from "@/components/ui/field";
+import { ReviewIcon, StudyIcon } from "@/components/ui/icons";
+import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { listDecks } from "@/features/decks/queries";
 import { listAllCategories } from "@/features/study/queries";
@@ -27,132 +31,152 @@ export default async function StudyHubPage() {
 
   if (withCards.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border-strong bg-surface p-12 text-center">
-        <p className="text-sm font-medium text-text">Nothing to study yet</p>
-        <p className="mx-auto mt-1 max-w-sm text-sm text-muted">
-          Add cards to a deck and it will show up here.
-        </p>
+      <div>
+        <PageHeader title="Study" />
+        <EmptyState
+          icon={<StudyIcon className="size-5" />}
+          title="Nothing to study yet"
+          body="A deck shows up here as soon as it has at least one card. Add some to a deck and come back."
+          action={
+            <Link href="/decks">
+              <Button>Go to your decks</Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-text">Study</h1>
-        <p className="mt-1 text-sm text-muted">
-          Pick decks and topics, then choose how you want to be tested. Leave
-          everything unchecked to study all of it.
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title="Study"
+        description="Pick what you want covered, then choose how you want to be tested. Leave everything unchecked to include all of it."
+      />
 
       {/*
         A plain GET form: the selection ends up in the URL, so a session is
         shareable and bookmarkable, and the whole thing works before any
         JavaScript loads. The two submit buttons differ only in formAction.
       */}
-      <form method="get" className="space-y-6">
-        <fieldset className="rounded-card border border-border bg-surface p-5">
-          <legend className="px-1 text-sm font-medium text-text">Decks</legend>
-          <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+      <form method="get" className="space-y-4">
+        <Fieldset
+          legend="Decks"
+          hint={`${withCards.length} with cards`}
+        >
+          <ul className="grid gap-1.5 sm:grid-cols-2">
             {withCards.map((deck) => (
               <li key={deck.id}>
-                <label className="flex cursor-pointer items-center gap-2.5 rounded-control border border-border px-3 py-2 text-sm transition-colors hover:border-border-strong">
-                  <input
-                    type="checkbox"
-                    name="deck"
-                    value={deck.id}
-                    className="size-4 accent-[var(--primary)]"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-text">
-                    {deck.emoji ? `${deck.emoji} ` : ""}
-                    {deck.title}
-                  </span>
-                  <span className="shrink-0 text-xs text-subtle">
-                    {deck.card_count}
-                  </span>
-                </label>
+                <Choice
+                  type="checkbox"
+                  name="deck"
+                  value={deck.id}
+                  label={
+                    <span className="flex items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate">
+                        {deck.emoji ? `${deck.emoji} ` : ""}
+                        {deck.title}
+                      </span>
+                      <span className="tnum shrink-0 text-sm text-subtle">
+                        {deck.card_count}
+                      </span>
+                    </span>
+                  }
+                />
               </li>
             ))}
           </ul>
-        </fieldset>
+        </Fieldset>
 
         {categories.length > 0 ? (
-          <fieldset className="rounded-card border border-border bg-surface p-5">
-            <legend className="px-1 text-sm font-medium text-text">Topics</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <Fieldset legend="Topics" hint="Narrows to matching cards">
+            <div className="flex flex-wrap gap-1.5">
               {categories.map((category) => (
-                <label
+                <Choice
                   key={category}
-                  className="flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-1 text-sm transition-colors hover:border-border-strong"
-                >
-                  <input
-                    type="checkbox"
-                    name="category"
-                    value={category}
-                    className="size-3.5 accent-[var(--primary)]"
-                  />
-                  <span className="text-text">{category}</span>
-                </label>
+                  type="checkbox"
+                  name="category"
+                  value={category}
+                  label={category}
+                  className="w-auto rounded-pill py-1.5 pl-2.5 pr-3.5"
+                />
               ))}
             </div>
-          </fieldset>
+          </Fieldset>
         ) : null}
 
-        <fieldset className="rounded-card border border-border bg-surface p-5">
-          <legend className="px-1 text-sm font-medium text-text">
-            Quiz options
-          </legend>
-          <p className="mt-1 text-xs text-subtle">
-            Only applies to quizzes. Flashcards just show every card.
-          </p>
-
-          <div className="mt-3 flex flex-wrap gap-2">
+        <Fieldset
+          legend="Quiz options"
+          hint="Ignored by flashcards, which show every card"
+        >
+          <div className="flex flex-wrap gap-1.5">
             {QUESTION_TYPES.map((type) => (
-              <label
+              <Choice
                 key={type}
-                className="flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-1 text-sm transition-colors hover:border-border-strong"
-              >
-                <input
-                  type="checkbox"
-                  name="type"
-                  value={type}
-                  defaultChecked={type === "multiple_choice"}
-                  className="size-3.5 accent-[var(--primary)]"
-                />
-                <span className="text-text">{QUESTION_TYPE_LABELS[type]}</span>
-              </label>
+                type="checkbox"
+                name="type"
+                value={type}
+                defaultChecked={type === "multiple_choice"}
+                label={QUESTION_TYPE_LABELS[type]}
+                className="w-auto rounded-pill py-1.5 pl-2.5 pr-3.5"
+              />
             ))}
           </div>
 
-          <div className="mt-4 flex items-center gap-2">
-            <label htmlFor="count" className="text-sm text-muted">
+          <div className="mt-4 flex items-center gap-3">
+            <label htmlFor="count" className="text-base text-muted">
               How many questions
             </label>
-            <select
-              id="count"
-              name="count"
-              defaultValue=""
-              className="h-9 rounded-control border border-border-strong bg-surface px-2 text-sm text-text"
-            >
+            <Select id="count" name="count" defaultValue="" className="w-36">
               <option value="">All cards</option>
               <option value="10">10</option>
               <option value="20">20</option>
               <option value="30">30</option>
               <option value="50">50</option>
-            </select>
+            </Select>
           </div>
-        </fieldset>
+        </Fieldset>
 
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" formAction="/study/flashcards">
+        {/* Sticky so the start buttons stay reachable while you scroll a long
+            list of decks — the thing you came here to do shouldn't scroll away. */}
+        <div className="sticky bottom-20 z-[var(--z-sticky)] flex flex-wrap gap-2 rounded-card border border-border bg-surface/90 p-2 shadow-raised backdrop-blur-md md:bottom-4">
+          <Button type="submit" formAction="/study/flashcards" size="lg">
+            <StudyIcon className="size-4" />
             Start flashcards
           </Button>
-          <Button type="submit" formAction="/study/quiz" variant="secondary">
+          <Button
+            type="submit"
+            formAction="/study/quiz"
+            variant="secondary"
+            size="lg"
+          >
+            <ReviewIcon className="size-4" />
             Start quiz
           </Button>
         </div>
       </form>
     </div>
+  );
+}
+
+function Fieldset({
+  legend,
+  hint,
+  children,
+}: {
+  legend: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset className="rounded-card border border-border bg-surface p-4">
+      <legend className="flex items-baseline gap-2 px-1">
+        <span className="text-md font-semibold tracking-tight text-text">
+          {legend}
+        </span>
+        {hint ? <span className="text-sm text-subtle">{hint}</span> : null}
+      </legend>
+      <div className="mt-3">{children}</div>
+    </fieldset>
   );
 }

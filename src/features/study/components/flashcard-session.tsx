@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/chip";
+import { ProgressRail } from "@/components/ui/layout";
+import { FlipCard } from "@/features/study/components/flip-card";
 import { shuffle } from "@/features/study/generate";
 import type { StudyCard } from "@/features/study/types";
 
@@ -74,61 +77,38 @@ export function FlashcardSession({
 
   if (!card) {
     return (
-      <EmptyState backHref={backHref}>
-        Nothing to study with those filters.
-      </EmptyState>
+      <SessionEmpty backHref={backHref}>
+        Nothing matched those filters. Widen the topic selection, or pick a
+        different deck.
+      </SessionEmpty>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-5">
-      <ProgressBar current={index + 1} total={cards.length} />
+    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+      <ProgressRail current={index + 1} total={cards.length} />
 
-      {/* The whole card is the flip target — clicking anywhere is the obvious
-          gesture, and a button keeps it reachable by keyboard and screen reader. */}
-      <button
-        type="button"
-        onClick={() => setFlipped((value) => !value)}
-        aria-live="polite"
-        className="flex min-h-64 w-full flex-col items-center justify-center gap-4 rounded-card border border-border bg-surface p-8 text-center shadow-card transition-colors hover:border-primary"
-      >
-        <span className="text-xs uppercase tracking-wide text-subtle">
-          {flipped ? "Answer" : "Question"}
-        </span>
+      <FlipCard
+        // Remounting per card resets the rotation instantly instead of
+        // animating backwards through the flip on every Next.
+        key={card.id}
+        front={{ text: card.front, imageUrl: card.front_image_url }}
+        back={{ text: card.back, imageUrl: card.back_image_url }}
+        flipped={flipped}
+        onFlip={() => setFlipped((value) => !value)}
+        hint={card.hint}
+        showHint={showHint}
+      />
 
-        <p className="whitespace-pre-wrap text-xl leading-relaxed text-text">
-          {flipped ? card.back : card.front}
-        </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" onClick={() => go(-1)} disabled={atStart}>
+          ← Previous
+        </Button>
+        <Button onClick={() => go(1)} disabled={atEnd}>
+          Next →
+        </Button>
 
-        {(flipped ? card.back_image_url : card.front_image_url) ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={(flipped ? card.back_image_url : card.front_image_url) ?? ""}
-            alt=""
-            className="max-h-56 rounded-control object-contain"
-          />
-        ) : null}
-
-        {!flipped && showHint && card.hint ? (
-          <p className="text-sm text-muted">Hint: {card.hint}</p>
-        ) : null}
-
-        <span className="text-xs text-subtle">
-          {flipped ? "Tap to see the question" : "Tap to reveal"}
-        </span>
-      </button>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => go(-1)} disabled={atStart}>
-            ← Previous
-          </Button>
-          <Button onClick={() => go(1)} disabled={atEnd}>
-            Next →
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
+        <span className="ml-auto flex items-center gap-1">
           {card.hint && !flipped ? (
             <Button
               variant="ghost"
@@ -147,54 +127,50 @@ export function FlashcardSession({
               Done
             </Button>
           </Link>
-        </div>
+        </span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-subtle">
-        <span>
-          {card.deckTitle}
-          {card.category ? ` · ${card.category}` : ""}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-subtle">
+        <span className="flex items-center gap-2">
+          <span className="truncate">{card.deckTitle}</span>
+          {card.category ? <Badge>{card.category}</Badge> : null}
         </span>
-        <span className="hidden sm:inline">
-          Space flips · ← → moves · S shuffles
-        </span>
+        <KeyHints />
       </div>
     </div>
   );
 }
 
-export function ProgressBar({
-  current,
-  total,
+/**
+ * Keyboard shortcuts, shown rather than hidden in a help menu.
+ *
+ * Desktop only — on touch there is no keyboard to press, and the line is just
+ * noise under the thing you actually tap.
+ */
+export function KeyHints({
+  hints = [
+    ["Space", "flip"],
+    ["← →", "move"],
+    ["S", "shuffle"],
+  ],
 }: {
-  current: number;
-  total: number;
+  hints?: [string, string][];
 }) {
   return (
-    <div>
-      <div className="mb-1.5 flex items-baseline justify-between text-xs text-subtle">
-        <span>
-          {current} of {total}
+    <span className="hidden items-center gap-3 sm:flex">
+      {hints.map(([key, action]) => (
+        <span key={key} className="flex items-center gap-1.5">
+          <kbd className="rounded border border-border bg-sunken px-1.5 py-0.5 font-mono text-2xs text-muted">
+            {key}
+          </kbd>
+          {action}
         </span>
-        <span>{Math.round((current / total) * 100)}%</span>
-      </div>
-      <div
-        className="h-1.5 overflow-hidden rounded-full bg-border"
-        role="progressbar"
-        aria-valuenow={current}
-        aria-valuemin={0}
-        aria-valuemax={total}
-      >
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${(current / total) * 100}%` }}
-        />
-      </div>
-    </div>
+      ))}
+    </span>
   );
 }
 
-export function EmptyState({
+export function SessionEmpty({
   children,
   backHref,
 }: {
@@ -202,8 +178,8 @@ export function EmptyState({
   backHref: string;
 }) {
   return (
-    <div className="mx-auto max-w-md rounded-card border border-dashed border-border-strong bg-surface p-10 text-center">
-      <p className="text-sm text-muted">{children}</p>
+    <div className="mx-auto max-w-md rounded-card border border-dashed border-border-strong bg-surface/60 p-10 text-center">
+      <p className="text-base text-muted">{children}</p>
       <Link href={backHref} className="mt-5 inline-block">
         <Button variant="secondary">Back</Button>
       </Link>

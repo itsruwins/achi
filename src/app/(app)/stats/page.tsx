@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { CheckIcon, FlameIcon, ReviewIcon, StatsIcon } from "@/components/ui/icons";
+import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { todayString } from "@/features/srs/algorithm";
 import {
@@ -47,35 +51,36 @@ export default async function StatsPage() {
 
   if (reviewed === 0) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-text">Stats</h1>
-        <div className="rounded-card border border-dashed border-border-strong bg-surface p-12 text-center">
-          <p className="text-sm font-medium text-text">No reviews yet</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-muted">
-            Add a deck to review and rate a few cards. Everything here is built
-            from your review history.
-          </p>
-        </div>
+      <div>
+        <PageHeader title="Stats" />
+        <EmptyState
+          icon={<StatsIcon className="size-5" />}
+          title="Nothing measured yet"
+          body="Everything here is built from cards you rate in review — streaks, accuracy, what's coming up. Rate a handful and the page fills in."
+          action={
+            <Link href="/review">
+              <Button>Go to review</Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-text">Stats</h1>
-        <p className="mt-1 text-sm text-muted">
-          Counted from cards you rated in review — flashcard flips aren&rsquo;t
-          scored, so nothing here is inflated by flipping through a deck.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        title="Stats"
+        description="Counted from cards you rated in review — flashcard flips aren't scored, so nothing here is inflated by flipping through a deck."
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Current streak"
           value={`${streak.current}`}
           hint={streak.current === 1 ? "day" : "days"}
           accent={streak.current > 0}
+          icon={<FlameIcon className="size-3.5" />}
         />
         <StatTile
           label="Best streak"
@@ -86,22 +91,28 @@ export default async function StatsPage() {
           label="Reviewed"
           value={reviewed.toLocaleString()}
           hint="cards rated"
+          icon={<ReviewIcon className="size-3.5" />}
         />
         <StatTile
           label="Accuracy"
           value={accuracy === null ? "—" : `${accuracy}%`}
           hint="knew it on sight"
+          icon={<CheckIcon className="size-3.5" />}
         />
       </div>
 
-      <ActivityHeatmap counts={activity} today={today} days={ACTIVITY_DAYS} />
+      <div className="mt-3">
+        <ActivityHeatmap counts={activity} today={today} days={ACTIVITY_DAYS} />
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <MaturityBar counts={maturity} />
         <ForecastChart days={forecast} />
       </div>
 
-      <StrugglingCards cards={struggling} />
+      <div className="mt-3">
+        <StrugglingCards cards={struggling} />
+      </div>
     </div>
   );
 }

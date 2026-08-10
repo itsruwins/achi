@@ -21,7 +21,7 @@ export function UsernameForm({
       {state.formError ? (
         <p
           role="alert"
-          className="rounded-control border border-danger bg-danger-subtle px-3 py-2 text-sm text-danger"
+          className="rounded-control border border-danger-subtle bg-danger-subtle px-3 py-2 text-base text-danger"
         >
           {state.formError}
         </p>
@@ -61,8 +61,8 @@ export function UsernameForm({
         />
       </Field>
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Saving…" : "Continue"}
+      <Button type="submit" size="lg" loading={isPending} className="w-full">
+        Continue
       </Button>
     </form>
   );

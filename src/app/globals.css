@@ -329,6 +329,7 @@
   --text-3xl: 1.875rem;
   --text-4xl: 2.25rem;
   --text-5xl: 2.875rem;
+  --text-6xl: 3.5rem;
 
   --ease-out-quart: var(--ease-out);
 }
@@ -387,6 +388,54 @@
   --active-wash: oklch(0.99 0 0 / 0.1);
   --skeleton-base: oklch(0.255 0.010 195);
   --skeleton-sheen: oklch(0.305 0.011 195);
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Drenched brand band
+
+   The one place the surface IS the colour rather than carrying an accent on a
+   neutral. Same token-scope trick as .band-dark, so components inside it need
+   no special casing.
+
+   L 0.44 is the deepest step that still reads as jade rather than as a dark
+   neutral, and it carries near-white body text at 6.7:1 with a muted tier at
+   5.6:1 — a drenched band that can't hold two tiers of text is just a colour.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.band-brand {
+  color-scheme: dark;
+
+  --bg: oklch(0.44 0.085 172);
+  --surface: oklch(0.395 0.078 172);
+  --surface-sunken: oklch(0.375 0.075 172);
+  --surface-raised: oklch(0.47 0.088 172);
+
+  --text: oklch(0.985 0.012 172);
+  --text-muted: oklch(0.90 0.040 172);
+  --text-subtle: oklch(0.835 0.052 172);
+  --text-inverse: oklch(0.24 0.05 172);
+
+  --border: oklch(0.55 0.075 172);
+  --border-strong: oklch(0.64 0.070 172);
+
+  /* Inside a jade band the primary action can't also be jade — it inverts to
+     near-white so the CTA still reads as the one thing to press. */
+  --primary: oklch(0.985 0.012 172);
+  --primary-hover: oklch(0.94 0.020 172);
+  --primary-active: oklch(0.90 0.030 172);
+  --primary-fg: oklch(0.30 0.075 172);
+  --primary-subtle: oklch(0.50 0.085 172);
+  --primary-border: oklch(0.62 0.075 172);
+
+  --accent: oklch(0.90 0.10 85);
+  --accent-subtle: oklch(0.50 0.075 120);
+  --accent-border: oklch(0.62 0.07 120);
+
+  --hover-wash: oklch(1 0 0 / 0.08);
+  --active-wash: oklch(1 0 0 / 0.14);
 
   background: var(--bg);
   color: var(--text);
@@ -461,6 +510,17 @@ p {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Marquee: the track holds two identical copies, so translating by exactly
+   half its width lands on a frame identical to the start. */
+@keyframes achi-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
 

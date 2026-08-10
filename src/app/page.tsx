@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/icons";
 import { getSessionUser } from "@/features/auth/queries";
 import { DemoCard } from "@/features/marketing/components/demo-card";
+import { Reviews } from "@/features/marketing/components/reviews";
 import { Showcase } from "@/features/marketing/components/showcase";
+import { StatBand } from "@/features/marketing/components/stat-band";
+import { Ticker } from "@/features/marketing/components/ticker";
 
 /**
  * Landing page.
@@ -34,9 +37,12 @@ export default async function Home() {
 
       <main className="flex-1">
         <Hero signedIn={Boolean(user)} />
+        <Ticker />
         <CapabilityBand />
         <TourSection />
+        <StatBand />
         <ScheduleSection />
+        <Reviews />
         <FaqSection />
         <ClosingBand signedIn={Boolean(user)} />
       </main>
@@ -113,15 +119,18 @@ function Hero({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[1fr_minmax(0,27rem)] lg:gap-16 lg:py-24">
       <div>
-        <h1 className="max-w-[16ch] text-4xl font-semibold leading-[1.05] tracking-tight text-text sm:text-5xl">
-          Turn your notes into cards you actually remember.
+        {/* Two beats, second one turning: forgetting is the thing everyone
+            accepts as inevitable, and the claim is that it's schedulable. */}
+        <h1 className="text-5xl font-semibold leading-[0.95] tracking-tight text-text sm:text-6xl">
+          Forget less.
+          <span className="mt-1 block text-primary">On purpose.</span>
         </h1>
 
-        <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-muted">
+        <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-muted">
           Paste a chapter or upload a lecture deck and get flashcards back in
-          seconds. Achi then schedules each card for the day you&rsquo;re about
-          to forget it — so revision costs minutes a day instead of a weekend
-          before the exam.
+          seconds. Achi then schedules every card for the day you&rsquo;re about
+          to forget it — so revision costs ten minutes a day instead of a
+          weekend before the exam.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">

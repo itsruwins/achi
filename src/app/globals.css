@@ -328,8 +328,68 @@
   --text-2xl: 1.5rem;
   --text-3xl: 1.875rem;
   --text-4xl: 2.25rem;
+  --text-5xl: 2.875rem;
 
   --ease-out-quart: var(--ease-out);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Inverted band
+
+   A full-bleed dark section used to break the landing page into value bands.
+   Rather than writing dark variants of every component, it re-points the
+   surface and ink tokens inside its own subtree — so Button, Badge, and
+   everything else render correctly in it with no extra props.
+
+   The band sits one step *below* the dark page background, so it still reads
+   as a distinct band when the whole app is already dark and there would
+   otherwise be nothing to see.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.band-dark {
+  color-scheme: dark;
+
+  --bg: oklch(0.155 0.008 195);
+  --surface: oklch(0.198 0.009 195);
+  --surface-sunken: oklch(0.172 0.008 195);
+  --surface-raised: oklch(0.232 0.010 195);
+
+  --text: oklch(0.965 0.004 180);
+  --text-muted: oklch(0.80 0.010 185);
+  --text-subtle: oklch(0.665 0.010 190);
+  --text-inverse: oklch(0.155 0.008 195);
+
+  --border: oklch(0.285 0.010 195);
+  --border-strong: oklch(0.365 0.012 195);
+
+  --primary: oklch(0.735 0.115 172);
+  --primary-hover: oklch(0.795 0.11 172);
+  --primary-active: oklch(0.685 0.115 172);
+  --primary-fg: oklch(0.17 0.03 172);
+  --primary-subtle: oklch(0.275 0.045 172);
+  --primary-border: oklch(0.39 0.07 172);
+
+  --accent: oklch(0.775 0.125 72);
+  --accent-subtle: oklch(0.275 0.045 68);
+  --accent-border: oklch(0.39 0.07 70);
+
+  --success: oklch(0.735 0.12 158);
+  --success-subtle: oklch(0.265 0.045 158);
+  --warning: oklch(0.785 0.115 75);
+  --warning-subtle: oklch(0.275 0.045 75);
+  --danger: oklch(0.685 0.145 25);
+  --danger-fg: oklch(0.17 0.04 25);
+  --danger-subtle: oklch(0.285 0.055 25);
+  --info: oklch(0.715 0.105 245);
+  --info-subtle: oklch(0.275 0.045 245);
+
+  --hover-wash: oklch(0.99 0 0 / 0.06);
+  --active-wash: oklch(0.99 0 0 / 0.1);
+  --skeleton-base: oklch(0.255 0.010 195);
+  --skeleton-sheen: oklch(0.305 0.011 195);
+
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

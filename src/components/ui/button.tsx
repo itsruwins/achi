@@ -16,7 +16,9 @@ type Size = "sm" | "md" | "lg";
  * no shadow bloom. It reads as a physical press without becoming decoration.
  */
 const base =
-  "relative inline-flex select-none items-center justify-center gap-2 " +
+  // Named group so a child (a trailing arrow, say) can react to the button's
+  // own hover without colliding with any group the button happens to sit in.
+  "group/btn relative inline-flex select-none items-center justify-center gap-2 " +
   "rounded-control font-medium whitespace-nowrap " +
   "transition-[background-color,border-color,color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out)] " +
   "active:translate-y-px " +

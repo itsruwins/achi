@@ -49,7 +49,7 @@ export function Reviews() {
     <section className="band-dark border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+          <h2 className="font-display text-3xl text-text sm:text-4xl">
             Why people keep the tab open
           </h2>
           {SAMPLE ? (
@@ -73,7 +73,7 @@ export function Reviews() {
           <div className="flex gap-6 self-start rounded-card border border-border bg-sunken p-4 lg:flex-col lg:gap-4">
             {FEATURED.stats.map(([figure, label]) => (
               <div key={label}>
-                <p className="tnum text-2xl font-semibold tracking-tight text-primary">
+                <p className="tnum font-display text-2xl text-primary">
                   {figure}
                 </p>
                 <p className="text-sm text-subtle">{label}</p>

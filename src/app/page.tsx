@@ -3,9 +3,11 @@ import Link from "next/link";
 import { Logo } from "@/components/shell/logo";
 import { Button } from "@/components/ui/button";
 import {
+  ArrowRightIcon,
   CheckIcon,
   CommunityIcon,
   ImportIcon,
+  PlusIcon,
   ReviewIcon,
   SparkIcon,
   StatsIcon,
@@ -121,9 +123,9 @@ function Hero({ signedIn }: { signedIn: boolean }) {
       <div>
         {/* Two beats, second one turning: forgetting is the thing everyone
             accepts as inevitable, and the claim is that it's schedulable. */}
-        <h1 className="text-5xl font-semibold leading-[0.95] tracking-tight text-text sm:text-6xl">
+        <h1 className="font-display text-5xl text-text sm:text-6xl">
           Forget less.
-          <span className="mt-1 block text-primary">On purpose.</span>
+          <span className="block text-primary">On purpose.</span>
         </h1>
 
         <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-muted">
@@ -199,7 +201,7 @@ function CapabilityBand() {
     <section className="band-dark border-y border-border">
       <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
         <div className="max-w-[46ch]">
-          <h2 className="text-3xl font-semibold tracking-tight text-text">
+          <h2 className="font-display text-3xl text-text">
             Three ways a deck gets made
           </h2>
           <p className="mt-3 text-lg leading-relaxed text-muted">
@@ -253,7 +255,7 @@ function TourSection() {
     <section id="tour" className="scroll-mt-16">
       <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
         <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
-          <h2 className="max-w-[20ch] text-3xl font-semibold tracking-tight text-text">
+          <h2 className="font-display max-w-[20ch] text-3xl text-text">
             Four ways to study, one deck
           </h2>
           <p className="max-w-[42ch] text-base leading-relaxed text-muted lg:pt-1.5">
@@ -279,7 +281,7 @@ function ScheduleSection() {
       <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
-            <h2 className="max-w-[18ch] text-3xl font-semibold tracking-tight text-text">
+            <h2 className="font-display max-w-[18ch] text-3xl text-text">
               Then it decides when you see them
             </h2>
             <p className="mt-4 max-w-[54ch] text-lg leading-relaxed text-muted">
@@ -381,7 +383,7 @@ function FaqSection() {
   return (
     <section id="faq" className="scroll-mt-16 border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
-        <h2 className="text-3xl font-semibold tracking-tight text-text">
+        <h2 className="font-display text-3xl text-text">
           Before you sign up
         </h2>
 
@@ -398,16 +400,7 @@ function FaqSection() {
                   aria-hidden="true"
                   className="grid size-5 shrink-0 place-items-center rounded-pill text-subtle transition-transform duration-[var(--dur)] ease-[var(--ease-out)] group-open:rotate-45"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="size-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
+                  <PlusIcon className="size-4" />
                 </span>
               </summary>
               <p className="max-w-[62ch] pb-4 text-base leading-relaxed text-muted">
@@ -425,7 +418,7 @@ function ClosingBand({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="band-dark border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-5 py-20 text-center lg:py-24">
-        <h2 className="mx-auto max-w-[18ch] text-3xl font-semibold leading-[1.1] tracking-tight text-text sm:text-4xl">
+        <h2 className="font-display mx-auto max-w-[18ch] text-3xl text-text sm:text-4xl">
           Make your first deck in about a minute
         </h2>
         <p className="mx-auto mt-4 max-w-[52ch] text-lg leading-relaxed text-muted">
@@ -503,18 +496,7 @@ function SiteFooter() {
 /** Nudges right on hover — the CTA's only flourish. */
 function Arrow() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      className="size-4 transition-transform duration-[var(--dur)] ease-[var(--ease-out)] group-hover/btn:translate-x-0.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M5 12h13M13 6l6 6-6 6" />
-    </svg>
+    <ArrowRightIcon className="size-4 transition-transform duration-[var(--dur)] ease-[var(--ease-out)] group-hover/btn:translate-x-0.5" />
   );
 }
 

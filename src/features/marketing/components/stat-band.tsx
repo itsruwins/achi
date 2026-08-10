@@ -42,7 +42,7 @@ export function StatBand() {
   return (
     <section className="band-brand">
       <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
-        <h2 className="max-w-[20ch] text-3xl font-semibold leading-[1.1] tracking-tight text-text sm:text-4xl">
+        <h2 className="font-display max-w-[20ch] text-3xl text-text sm:text-4xl">
           The whole loop, in three numbers
         </h2>
 
@@ -59,11 +59,11 @@ export function StatBand() {
                 index === ROWS.length - 1 && "border-b",
               )}
             >
-              <dt className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+              <dt className="font-display text-2xl text-text sm:text-3xl">
                 {row.phrase}
               </dt>
               <dd className="mt-2 sm:mt-0 sm:text-right">
-                <span className="tnum block text-4xl font-semibold leading-none tracking-tight text-text sm:text-5xl">
+                <span className="tnum font-display block text-4xl leading-none text-text sm:text-5xl">
                   {row.figure}
                 </span>
                 <span className="mt-1.5 block text-sm text-subtle">

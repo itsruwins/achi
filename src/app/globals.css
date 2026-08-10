@@ -33,14 +33,15 @@
      `muted` is body-weight text and clears 4.5:1. `subtle` is for text that
      is genuinely optional — counts, hints, timestamps — and never carries a
      sentence the user needs. */
-  --text: oklch(0.24 0.012 195);
-  --text-muted: oklch(0.45 0.011 195);
-  --text-subtle: oklch(0.54 0.009 195);
+  --text: oklch(0.225 0.022 185);
+  --text-muted: oklch(0.448 0.018 188);
+  --text-subtle: oklch(0.538 0.014 190);
   --text-inverse: oklch(0.99 0 0);
 
   /* ── Lines ───────────────────────────────────────────────────────────────── */
-  --border: oklch(0.918 0.005 180);
-  --border-strong: oklch(0.855 0.007 180);
+  --border-subtle: oklch(0.949 0.004 180);
+  --border: oklch(0.915 0.006 180);
+  --border-strong: oklch(0.852 0.009 180);
 
   /* ── Primary: jade ───────────────────────────────────────────────────────
      Reserved for primary actions, current selection, and state. Not
@@ -80,6 +81,9 @@
   --selected-wash: var(--primary-subtle);
   --disabled-opacity: 0.45;
   --focus-ring: var(--primary);
+  --focus-halo: oklch(0.525 0.100 172 / 0.18);
+  --selection: oklch(0.525 0.100 172 / 0.22);
+  --selection-fg: oklch(0.18 0.030 180);
 
   /* ── Radii ───────────────────────────────────────────────────────────────── */
   --radius-control: 0.625rem;
@@ -123,19 +127,20 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --bg: oklch(0.178 0.008 195);
-    --surface: oklch(0.218 0.009 195);
-    --surface-sunken: oklch(0.196 0.008 195);
-    --surface-raised: oklch(0.252 0.010 195);
+    --bg: oklch(0.166 0.010 195);
+    --surface: oklch(0.223 0.012 195);
+    --surface-sunken: oklch(0.192 0.011 195);
+    --surface-raised: oklch(0.268 0.013 195);
     --overlay: oklch(0.12 0.006 195 / 0.65);
 
     --text: oklch(0.955 0.004 180);
     --text-muted: oklch(0.775 0.010 185);
-    --text-subtle: oklch(0.635 0.010 190);
+    --text-subtle: oklch(0.655 0.011 190);
     --text-inverse: oklch(0.17 0.008 195);
 
-    --border: oklch(0.295 0.010 195);
-    --border-strong: oklch(0.375 0.012 195);
+    --border-subtle: oklch(0.258 0.010 195);
+    --border: oklch(0.302 0.012 195);
+    --border-strong: oklch(0.385 0.014 195);
 
     --primary: oklch(0.735 0.115 172);
     --primary-hover: oklch(0.795 0.11 172);
@@ -158,8 +163,11 @@
     --info: oklch(0.715 0.105 245);
     --info-subtle: oklch(0.285 0.045 245);
 
-    --hover-wash: oklch(0.99 0 0 / 0.055);
-    --active-wash: oklch(0.99 0 0 / 0.095);
+    --hover-wash: oklch(0.99 0 0 / 0.06);
+    --active-wash: oklch(0.99 0 0 / 0.1);
+    --focus-halo: oklch(0.735 0.115 172 / 0.25);
+    --selection: oklch(0.735 0.115 172 / 0.3);
+    --selection-fg: oklch(0.98 0.01 172);
     --skeleton-base: oklch(0.275 0.010 195);
     --skeleton-sheen: oklch(0.325 0.011 195);
 
@@ -174,19 +182,20 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: oklch(0.178 0.008 195);
-  --surface: oklch(0.218 0.009 195);
-  --surface-sunken: oklch(0.196 0.008 195);
-  --surface-raised: oklch(0.252 0.010 195);
+  --bg: oklch(0.166 0.010 195);
+  --surface: oklch(0.223 0.012 195);
+  --surface-sunken: oklch(0.192 0.011 195);
+  --surface-raised: oklch(0.268 0.013 195);
   --overlay: oklch(0.12 0.006 195 / 0.65);
 
   --text: oklch(0.955 0.004 180);
   --text-muted: oklch(0.775 0.010 185);
-  --text-subtle: oklch(0.635 0.010 190);
+  --text-subtle: oklch(0.655 0.011 190);
   --text-inverse: oklch(0.17 0.008 195);
 
-  --border: oklch(0.295 0.010 195);
-  --border-strong: oklch(0.375 0.012 195);
+  --border-subtle: oklch(0.258 0.010 195);
+  --border: oklch(0.302 0.012 195);
+  --border-strong: oklch(0.385 0.014 195);
 
   --primary: oklch(0.735 0.115 172);
   --primary-hover: oklch(0.795 0.11 172);
@@ -209,8 +218,11 @@
   --info: oklch(0.715 0.105 245);
   --info-subtle: oklch(0.285 0.045 245);
 
-  --hover-wash: oklch(0.99 0 0 / 0.055);
-  --active-wash: oklch(0.99 0 0 / 0.095);
+  --hover-wash: oklch(0.99 0 0 / 0.06);
+  --active-wash: oklch(0.99 0 0 / 0.1);
+  --focus-halo: oklch(0.735 0.115 172 / 0.25);
+  --selection: oklch(0.735 0.115 172 / 0.3);
+  --selection-fg: oklch(0.98 0.01 172);
   --skeleton-base: oklch(0.275 0.010 195);
   --skeleton-sheen: oklch(0.325 0.011 195);
 
@@ -267,6 +279,7 @@
   --color-subtle: var(--text-subtle);
   --color-inverse: var(--text-inverse);
 
+  --color-border-subtle: var(--border-subtle);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
@@ -311,25 +324,63 @@
   --shadow-raised: var(--shadow-raised);
   --shadow-modal: var(--shadow-modal);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--ff-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--ff-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-display: var(--ff-display), ui-serif, Georgia, serif;
 
   /* Fixed rem scale, not fluid. Product UI is viewed at consistent DPI, and a
      clamp()-sized heading that shrinks inside a panel looks broken, not
-     responsive. Ratio ~1.15 — tight, because there are many type roles here
-     and exaggerated contrast reads as noise. */
+     responsive. Ratio ~1.15 at the small end where there are many roles,
+     opening to ~1.22 at display sizes where contrast has to carry.
+
+     Every step carries its own line-height and tracking. Without them a 3xl
+     heading inherits body's 1.5 and sits far too loose, which is why headings
+     used to need an ad-hoc `leading-*` at every call site. Leading tightens as
+     size grows; tracking goes negative in step, because the same optical
+     spacing reads wider the larger the type gets. */
   --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.45;
+  --text-2xs--letter-spacing: 0.005em;
+
   --text-xs: 0.75rem;
+  --text-xs--line-height: 1.45;
+
   --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.5;
+
   --text-base: 0.875rem;
+  --text-base--line-height: 1.55;
+
   --text-md: 0.9375rem;
+  --text-md--line-height: 1.55;
+
   --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.55;
+  --text-lg--letter-spacing: -0.005em;
+
   --text-xl: 1.25rem;
+  --text-xl--line-height: 1.4;
+  --text-xl--letter-spacing: -0.012em;
+
   --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.3;
+  --text-2xl--letter-spacing: -0.016em;
+
   --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.2;
+  --text-3xl--letter-spacing: -0.02em;
+
   --text-4xl: 2.25rem;
+  --text-4xl--line-height: 1.12;
+  --text-4xl--letter-spacing: -0.022em;
+
   --text-5xl: 2.875rem;
+  --text-5xl--line-height: 1.06;
+  --text-5xl--letter-spacing: -0.025em;
+
   --text-6xl: 3.5rem;
+  --text-6xl--line-height: 1.0;
+  --text-6xl--letter-spacing: -0.028em;
 
   --ease-out-quart: var(--ease-out);
 }
@@ -389,6 +440,10 @@
   --skeleton-base: oklch(0.255 0.010 195);
   --skeleton-sheen: oklch(0.305 0.011 195);
 
+  --focus-halo: oklch(0.735 0.115 172 / 0.28);
+  --selection: oklch(0.735 0.115 172 / 0.3);
+  --selection-fg: oklch(0.98 0.01 172);
+  --border-subtle: oklch(0.245 0.010 195);
   background: var(--bg);
   color: var(--text);
 }
@@ -437,6 +492,10 @@
   --hover-wash: oklch(1 0 0 / 0.08);
   --active-wash: oklch(1 0 0 / 0.14);
 
+  --focus-halo: oklch(0.985 0.012 172 / 0.35);
+  --selection: oklch(0.985 0.012 172 / 0.28);
+  --selection-fg: oklch(0.99 0.01 172);
+  --border-subtle: oklch(0.50 0.072 172);
   background: var(--bg);
   color: var(--text);
 }
@@ -448,17 +507,22 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Contextual alternates and kerning on; the grotesque's default figures are
+     proportional, which is right for prose — `.tnum` opts numbers out. */
+  font-feature-settings: "kern", "calt";
 }
 
-/* Headings pull tighter than body; balance keeps two-line titles even. */
+/* Headings inherit the scale's own tracking now, so the blanket -0.018em is
+   gone. `balance` keeps two-line titles from leaving one orphaned word. */
 h1,
 h2,
-h3 {
-  letter-spacing: -0.018em;
+h3,
+h4 {
   text-wrap: balance;
 }
 
@@ -466,12 +530,53 @@ p {
   text-wrap: pretty;
 }
 
+/*
+  Display face.
+
+  Fraunces ships playful by default: SOFT rounds the terminals and WONK swaps
+  in the quirky alternates. Both are pulled to 0 for a straight editorial cut.
+  `opsz` is what makes one file work at 18px and 56px — high contrast and tight
+  spacing at display sizes, sturdier strokes when small.
+
+  Opt-in via .font-display rather than applied to every heading: a dense product
+  UI wants its section labels in the grotesque, and a serif everywhere would
+  make the app feel like a document.
+*/
+.font-display {
+  font-family: var(--font-display);
+  font-variation-settings:
+    "SOFT" 0,
+    "WONK" 0,
+    "opsz" 40;
+  font-weight: 600;
+}
+
+/* Below ~24px the display face needs a lower optical size to keep its strokes
+   from thinning out. */
+.font-display-sm {
+  font-family: var(--font-display);
+  font-variation-settings:
+    "SOFT" 0,
+    "WONK" 0,
+    "opsz" 16;
+  font-weight: 600;
+}
+
 /* One focus treatment for the whole app. Keyboard users should never have to
-   guess where they are. */
+   guess where they are. The paired shadow separates the ring from whatever it
+   lands on, so it stays visible on a primary button as well as on the page. */
 :focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 3px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px var(--focus-halo);
+}
+
+/* Selection was left at the browser default — a stock blue that belongs to no
+   theme and, on a dark background, is nearly unreadable. */
+::selection {
+  background: var(--selection);
+  color: var(--selection-fg);
 }
 
 /* Numeric UI — counts, timers, progress — uses tabular figures so values stop
@@ -484,7 +589,7 @@ p {
    as a kicker above section headings — an eyebrow over every section is
    scaffolding, not voice. */
 .label-data {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;

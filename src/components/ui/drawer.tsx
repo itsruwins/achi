@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { IconButton } from "@/components/ui/button";
+import { CloseIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -73,17 +74,7 @@ export function Drawer({
             ) : null}
           </div>
           <IconButton size="sm" onClick={onClose} aria-label="Close">
-            <svg
-              viewBox="0 0 24 24"
-              className="size-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="m6 6 12 12M18 6 6 18" />
-            </svg>
+            <CloseIcon className="size-4" />
           </IconButton>
         </header>
 

@@ -3,7 +3,13 @@
 import { useId, useState } from "react";
 
 import { Badge } from "@/components/ui/chip";
-import { CheckIcon, ReviewIcon, SparkIcon, StudyIcon } from "@/components/ui/icons";
+import {
+  CheckIcon,
+  GenerateIcon,
+  ReviewIcon,
+  SparkIcon,
+  StudyIcon,
+} from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 
 type Mode = "flashcards" | "quiz" | "tutor" | "generate";
@@ -40,7 +46,7 @@ const MODES: {
     label: "Generate from notes",
     blurb:
       "Paste a chapter or upload a file and get a draft deck you can edit before saving.",
-    icon: CheckIcon,
+    icon: GenerateIcon,
   },
 ];
 

@@ -71,7 +71,7 @@ export function StatTile({
       </p>
       <p
         className={cn(
-          "tnum mt-1.5 text-3xl font-semibold tracking-tight",
+          "tnum font-display mt-1.5 text-3xl",
           accent ? "text-accent" : "text-text",
         )}
       >
@@ -269,8 +269,14 @@ export function ForecastChart({ days }: { days: ForecastDay[] }) {
               key={day.dueOn}
               className="group flex min-w-0 flex-1 flex-col items-center gap-1.5"
             >
+              {/*
+                A zero day renders a non-breaking space rather than an empty
+                string: an empty span collapses to no height, which shortens
+                that one column and lifts its weekday label out of line with
+                the rest of the axis.
+              */}
               <span className="tnum text-sm text-muted">
-                {day.cards > 0 ? day.cards : ""}
+                {day.cards > 0 ? day.cards : " "}
               </span>
 
               <div className="flex h-24 w-full items-end justify-center">

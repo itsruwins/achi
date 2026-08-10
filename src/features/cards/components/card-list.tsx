@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button, IconButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/chip";
+import { ArrowUpIcon } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ui/layout";
 import { deleteCard, moveCard } from "@/features/cards/actions";
 import { deriveCategories, type Card } from "@/features/cards/types";
@@ -190,18 +191,9 @@ function MoveButton({
         aria-label={label}
         title={label}
       >
-        <svg
-          viewBox="0 0 24 24"
+        <ArrowUpIcon
           className={cn("size-4", direction === "down" && "rotate-180")}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M12 19V5M6 11l6-6 6 6" />
-        </svg>
+        />
       </IconButton>
     </form>
   );

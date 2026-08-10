@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/chip";
+import { PinIcon } from "@/components/ui/icons";
 import type { Deck } from "@/features/decks/types";
 import { cn } from "@/lib/utils/cn";
 
@@ -52,14 +53,7 @@ export function DeckTile({ deck, due }: { deck: Deck; due?: number }) {
             className="shrink-0 text-accent"
             title="Pinned to the top of your decks"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-3.5"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path d="M14.5 2.5 21.5 9.5l-1.8 1.8-1.1-.3-3.9 3.9.3 2.6-1.7 1.7-4.2-4.2-4.6 4.6-1.1-1.1 4.6-4.6-4.2-4.2 1.7-1.7 2.6.3 3.9-3.9-.3-1.1z" />
-            </svg>
+            <PinIcon className="size-3.5" />
             <span className="sr-only">Pinned</span>
           </span>
         ) : null}

@@ -517,7 +517,7 @@ function ScoreRing({ score }: { score: number }) {
           className="transition-[stroke-dashoffset] duration-[600ms] ease-[var(--ease-out)]"
         />
       </svg>
-      <span className="tnum relative text-2xl font-semibold tracking-tight text-text">
+      <span className="tnum font-display relative text-2xl text-text">
         {score}
         <span className="text-lg text-subtle">%</span>
       </span>

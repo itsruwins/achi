@@ -5,6 +5,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
+import { ChevronDownIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 
 type FieldProps = {
@@ -144,18 +145,7 @@ export function Select({
       >
         {children}
       </select>
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="m6 9 6 6 6-6" />
-      </svg>
+      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle" />
     </div>
   );
 }

@@ -11,6 +11,28 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   cloze: "Fill in the blank",
 };
 
+/** Every type, in the order they're offered. */
+export const QUESTION_TYPES: QuestionType[] = [
+  "multiple_choice",
+  "true_false",
+  "identification",
+  "cloze",
+];
+
+/**
+ * What a quiz asks when nobody chose.
+ *
+ * A mix beats a single type — answering the same shape thirty times turns into
+ * pattern matching on the options rather than recall. Cloze is left out because
+ * it only works on cards whose front carries the `___` marker; offering it by
+ * default would quietly degrade to identification on decks that don't use it.
+ */
+export const DEFAULT_QUESTION_TYPES: QuestionType[] = [
+  "multiple_choice",
+  "true_false",
+  "identification",
+];
+
 type Base = {
   cardId: string;
   /** Deck the card came from — shown in cross-deck sessions. */

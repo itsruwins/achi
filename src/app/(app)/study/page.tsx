@@ -8,16 +8,13 @@ import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { requireOnboardedUser } from "@/features/auth/queries";
 import { listDecks } from "@/features/decks/queries";
 import { listAllCategories } from "@/features/study/queries";
-import { QUESTION_TYPE_LABELS, type QuestionType } from "@/features/study/types";
+import {
+  DEFAULT_QUESTION_TYPES,
+  QUESTION_TYPE_LABELS,
+  QUESTION_TYPES,
+} from "@/features/study/types";
 
 export const metadata: Metadata = { title: "Study" };
-
-const QUESTION_TYPES: QuestionType[] = [
-  "multiple_choice",
-  "true_false",
-  "identification",
-  "cloze",
-];
 
 export default async function StudyHubPage() {
   const { user } = await requireOnboardedUser();
@@ -116,7 +113,7 @@ export default async function StudyHubPage() {
                 type="checkbox"
                 name="type"
                 value={type}
-                defaultChecked={type === "multiple_choice"}
+                defaultChecked={DEFAULT_QUESTION_TYPES.includes(type)}
                 label={QUESTION_TYPE_LABELS[type]}
                 className="w-auto rounded-pill py-1.5 pl-2.5 pr-3.5"
               />

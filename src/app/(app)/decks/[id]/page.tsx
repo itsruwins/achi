@@ -20,6 +20,7 @@ import { VISIBILITY_LABELS } from "@/features/decks/types";
 import { listFolders } from "@/features/folders/queries";
 import { EnrollToggle } from "@/features/srs/components/enroll-toggle";
 import { isEnrolled } from "@/features/srs/queries";
+import { QuizOptions } from "@/features/study/components/quiz-options";
 import { getShareToken } from "@/features/sharing/queries";
 
 export async function generateMetadata({
@@ -121,9 +122,7 @@ export default async function DeckPage({ params }: PageProps<"/decks/[id]">) {
               Flashcards
             </Button>
           </Link>
-          <Link href={`/study/quiz?deck=${deck.id}&type=multiple_choice`}>
-            <Button variant="secondary">Quiz</Button>
-          </Link>
+          <QuizOptions deckId={deck.id} />
           {enrolled ? (
             <Link href={`/review?deck=${deck.id}`}>
               <Button variant="secondary">

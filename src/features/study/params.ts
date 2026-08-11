@@ -1,4 +1,8 @@
-import type { QuestionType } from "./types";
+import {
+  DEFAULT_QUESTION_TYPES,
+  QUESTION_TYPES,
+  type QuestionType,
+} from "./types";
 
 type ParamValue = string | string[] | undefined;
 
@@ -15,19 +19,12 @@ export function readList(value: ParamValue): string[] {
   return values.map((entry) => entry.trim()).filter(Boolean);
 }
 
-const ALL_TYPES: QuestionType[] = [
-  "multiple_choice",
-  "true_false",
-  "identification",
-  "cloze",
-];
-
 export function readQuestionTypes(value: ParamValue): QuestionType[] {
   const requested = readList(value).filter((entry): entry is QuestionType =>
-    ALL_TYPES.includes(entry as QuestionType),
+    QUESTION_TYPES.includes(entry as QuestionType),
   );
   // An empty selection means "no preference", not "no questions".
-  return requested.length > 0 ? requested : ["multiple_choice"];
+  return requested.length > 0 ? requested : DEFAULT_QUESTION_TYPES;
 }
 
 export function readCount(value: ParamValue): number | undefined {

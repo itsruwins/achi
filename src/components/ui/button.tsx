@@ -38,6 +38,21 @@ const sizes: Record<Size, string> = {
   lg: "h-11 px-5 text-md",
 };
 
+/**
+ * The button's look, without the button.
+ *
+ * For the handful of elements that must not be a `<button>` but should read as
+ * one — a `<summary>` that opens a disclosure, say. Prefer `<Button>` anywhere
+ * a real button works; this exists so those exceptions don't fork the styling.
+ */
+export function buttonClass({
+  variant = "primary",
+  size = "md",
+  className,
+}: { variant?: Variant; size?: Size; className?: string } = {}) {
+  return cn(base, variants[variant], sizes[size], className);
+}
+
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;

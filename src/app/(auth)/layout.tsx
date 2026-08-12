@@ -23,7 +23,9 @@ export default async function AuthLayout({
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-5 py-12">
       <div className="w-full max-w-sm">
-        <Link href="/" className="mb-6 flex justify-center">
+        {/* Centred, but only as wide as the mark — a full-width link means the
+            dead space either side of the logo is also a link home. */}
+        <Link href="/" className="mx-auto mb-6 flex min-h-11 w-fit items-center justify-center">
           <Logo />
         </Link>
 

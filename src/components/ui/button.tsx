@@ -32,10 +32,18 @@ const variants: Record<Variant, string> = {
   danger: "bg-danger text-danger-fg hover:brightness-110 active:brightness-95",
 };
 
+/**
+ * Heights step up on touch and back down from `sm` up.
+ *
+ * 44px is the smallest target most people hit reliably with a thumb, and the
+ * pointer-screen sizes here (32/38px) are well under it. Rather than making the
+ * whole app roomier, each size gains a touch tier and keeps its dense desktop
+ * one. `lg` is already 44px, so it only grows its padding.
+ */
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-2.5 text-sm",
-  md: "h-9.5 px-3.5 text-base",
-  lg: "h-11 px-5 text-md",
+  sm: "h-9 px-3 text-sm sm:h-8 sm:px-2.5",
+  md: "h-11 px-4 text-base sm:h-9.5 sm:px-3.5",
+  lg: "h-12 px-5 text-md sm:h-11",
 };
 
 /**
@@ -53,11 +61,13 @@ export function buttonClass({
   return cn(base, variants[variant], sizes[size], className);
 }
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
 };
+
+type Props = ButtonProps;
 
 export function Button({
   variant = "primary",
@@ -82,37 +92,65 @@ export function Button({
       {/* The label keeps its space while loading, so the button never resizes
           mid-click and shift the layout under the cursor. */}
       <span className={cn("contents", loading && "invisible")}>{children}</span>
-      {loading ? <Spinner /> : null}
+      {loading ? <SpinnerOverlay /> : null}
     </button>
   );
 }
 
-function Spinner() {
+/**
+ * The app's only spinner. Inherits `currentColor`, so it reads correctly on a
+ * primary button, a danger button, and a bare rating tile without variants.
+ */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      className={cn("size-4 animate-spin", className)}
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeOpacity="0.25"
+      />
+      <path
+        d="M8 2a6 6 0 0 1 6 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Spinner centred over a button's own box, replacing the hidden label. */
+export function SpinnerOverlay() {
   return (
     <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
-      <svg viewBox="0 0 16 16" className="size-4 animate-spin">
-        <circle
-          cx="8"
-          cy="8"
-          r="6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeOpacity="0.25"
-        />
-        <path
-          d="M8 2a6 6 0 0 1 6 6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      <Spinner />
     </span>
   );
 }
 
-/** Square icon-only button. Always needs an aria-label. */
+/**
+ * Square icon-only button. Always needs an aria-label.
+ *
+ * Only the *width* is set here, and the size is forwarded so the height comes
+ * from the shared size map. `cn` is a plain join with no conflict resolution
+ * (see lib/utils/cn), so a `size-*` here would land alongside the map's `h-*`
+ * and leave the winner up to Tailwind's output order rather than to this file.
+ */
+const iconWidths: Record<Size, string> = {
+  sm: "w-9 sm:w-8",
+  md: "w-11 sm:w-9.5",
+  lg: "w-12 sm:w-11",
+};
+
 export function IconButton({
   className,
   size = "md",
@@ -122,11 +160,8 @@ export function IconButton({
   return (
     <Button
       variant={variant}
-      className={cn(
-        "px-0",
-        size === "sm" ? "size-8" : size === "lg" ? "size-11" : "size-9.5",
-        className,
-      )}
+      size={size}
+      className={cn("px-0 sm:px-0", iconWidths[size], className)}
       {...props}
     />
   );

@@ -11,6 +11,7 @@ import {
   StatsIcon,
   StudyIcon,
 } from "@/components/ui/icons";
+import { LinkPending } from "@/components/ui/pending";
 import { cn } from "@/lib/utils/cn";
 
 type Item = {
@@ -69,6 +70,7 @@ export function DesktopNav({ dueCount }: { dueCount: number }) {
           >
             <Icon className={cn("size-4", active ? "text-primary" : "text-subtle")} />
             {item.label}
+            <LinkPending />
             {item.badge ? <CountPip value={item.badge} /> : null}
           </Link>
         );
@@ -110,6 +112,7 @@ export function MobileNav({ dueCount }: { dueCount: number }) {
             >
               <span className="relative">
                 <Icon className="size-5" />
+                <LinkPending className="absolute -bottom-0.5 left-1/2 -translate-x-1/2" />
                 {item.badge ? (
                   <span className="absolute -right-2 -top-1 grid min-w-3.5 place-items-center rounded-pill bg-primary px-1 text-[9px] font-semibold leading-[14px] text-primary-fg">
                     {item.badge > 9 ? "9+" : item.badge}

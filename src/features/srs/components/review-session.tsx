@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, SpinnerOverlay } from "@/components/ui/button";
 import { Badge } from "@/components/ui/chip";
 import { CheckIcon, FlameIcon } from "@/components/ui/icons";
 import { ProgressRail } from "@/components/ui/layout";
@@ -46,6 +46,10 @@ export function ReviewSession({ cards }: { cards: DueCard[] }) {
   const [revealed, setRevealed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Which rating is in flight. `isPending` alone can only grey all four out,
+  // which tells you the app is busy but not which button you actually hit —
+  // and at four adjacent targets on a phone that's the thing you want confirmed.
+  const [ratingInFlight, setRatingInFlight] = useState<Rating | null>(null);
 
   // Tally per rating, so the summary at the end says something more useful than
   // a raw count of cards seen.
@@ -63,18 +67,21 @@ export function ReviewSession({ cards }: { cards: DueCard[] }) {
     (rating: Rating) => {
       if (!card || isPending) return;
       setError(null);
+      setRatingInFlight(rating);
 
       startTransition(async () => {
         const result = await reviewCard(card.cardId, rating);
 
         if (!result.ok) {
           setError(result.error);
+          setRatingInFlight(null);
           return;
         }
 
         setTally((current) => ({ ...current, [rating]: current[rating] + 1 }));
         setRevealed(false);
         setIndex((current) => current + 1);
+        setRatingInFlight(null);
       });
     },
     [card, isPending],
@@ -145,7 +152,14 @@ export function ReviewSession({ cards }: { cards: DueCard[] }) {
         </p>
 
         <div className="mt-6 flex justify-center gap-2">
-          <Button onClick={() => router.refresh()}>Check for more</Button>
+          {/* router.refresh() is async but returns void, so the transition is
+              the only thing that knows when the new queue has landed. */}
+          <Button
+            loading={isPending}
+            onClick={() => startTransition(() => router.refresh())}
+          >
+            Check for more
+          </Button>
           <Link href="/decks">
             <Button variant="secondary">Done</Button>
           </Link>
@@ -220,30 +234,42 @@ export function ReviewSession({ cards }: { cards: DueCard[] }) {
       {revealed ? (
         <div className="[animation:achi-fade-up_var(--dur)_var(--ease-out)]">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {RATINGS.map((rating, position) => (
-              <button
-                key={rating}
-                type="button"
-                disabled={isPending}
-                onClick={() => rate(rating)}
-                className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-control border bg-surface px-3 py-2.5",
-                  "transition-[background-color,border-color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out)]",
-                  "active:translate-y-px disabled:pointer-events-none disabled:opacity-[var(--disabled-opacity)]",
-                  RATING_STYLES[rating],
-                )}
-              >
-                <span className="flex items-center gap-1.5 text-base font-medium">
-                  {RATING_LABELS[rating]}
-                  <kbd className="rounded border border-current/25 px-1 font-mono text-2xs opacity-60">
-                    {position + 1}
-                  </kbd>
-                </span>
-                <span className="text-sm text-subtle">
-                  {RATING_HINTS[rating]}
-                </span>
-              </button>
-            ))}
+            {RATINGS.map((rating, position) => {
+              const submitting = ratingInFlight === rating;
+
+              return (
+                <button
+                  key={rating}
+                  type="button"
+                  disabled={isPending}
+                  aria-busy={submitting || undefined}
+                  onClick={() => rate(rating)}
+                  className={cn(
+                    "relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-control border bg-surface px-3 py-2.5",
+                    "transition-[background-color,border-color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out)]",
+                    "active:translate-y-px disabled:pointer-events-none",
+                    // The pressed button keeps full opacity and takes a spinner;
+                    // only the other three recede.
+                    isPending && !submitting && "opacity-[var(--disabled-opacity)]",
+                    RATING_STYLES[rating],
+                  )}
+                >
+                  <span className={cn("contents", submitting && "invisible")}>
+                    <span className="flex items-center gap-1.5 text-base font-medium">
+                      {RATING_LABELS[rating]}
+                      <kbd className="rounded border border-current/25 px-1 font-mono text-2xs opacity-60 max-sm:hidden">
+                        {position + 1}
+                      </kbd>
+                    </span>
+                    <span className="text-sm text-subtle">
+                      {RATING_HINTS[rating]}
+                    </span>
+                  </span>
+
+                  {submitting ? <SpinnerOverlay /> : null}
+                </button>
+              );
+            })}
           </div>
           <p className="mt-2 text-center text-sm text-subtle">
             Be honest — the schedule is only as good as the ratings.

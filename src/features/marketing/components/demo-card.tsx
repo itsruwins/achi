@@ -89,7 +89,7 @@ export function DemoCard() {
         <button
           type="button"
           onClick={next}
-          className="rounded-control px-2 py-1 text-sm text-muted transition-colors duration-[var(--dur-fast)] hover:text-text"
+          className="-my-1.5 flex min-h-11 items-center rounded-control px-2 text-sm text-muted transition-colors duration-[var(--dur-fast)] hover:text-text sm:my-0 sm:min-h-0 sm:py-1"
         >
           Next card →
         </button>

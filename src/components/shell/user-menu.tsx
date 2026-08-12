@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ThemeToggle } from "@/components/shell/theme";
+import { SubmitText } from "@/components/ui/pending";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -102,13 +103,13 @@ export function UserMenu({
           <div className="my-1 h-px bg-border" />
 
           <form action={signOut}>
-            <button
-              type="submit"
+            <SubmitText
+              pendingLabel="Signing out…"
               role="menuitem"
               className="w-full rounded-control px-2.5 py-1.5 text-left text-base text-muted transition-colors duration-[var(--dur-fast)] hover:bg-danger-subtle hover:text-danger"
             >
               Sign out
-            </button>
+            </SubmitText>
           </form>
         </div>
       ) : null}

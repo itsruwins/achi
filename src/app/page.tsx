@@ -60,7 +60,7 @@ function SiteHeader({ signedIn }: { signedIn: boolean }) {
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-bg/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-5">
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="flex h-14 shrink-0 items-center">
           <Logo />
         </Link>
 
@@ -91,7 +91,7 @@ function SiteHeader({ signedIn }: { signedIn: boolean }) {
         <div className="ml-auto flex items-center gap-2 md:ml-0">
           {signedIn ? (
             <Link href="/decks">
-              <Button size="sm">
+              <Button size="sm" className="max-sm:h-11 max-sm:px-4">
                 Your decks
                 <Arrow />
               </Button>
@@ -99,12 +99,12 @@ function SiteHeader({ signedIn }: { signedIn: boolean }) {
           ) : (
             <>
               <Link href="/sign-in">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="max-sm:h-11 max-sm:px-4">
                   Sign in
                 </Button>
               </Link>
               <Link href="/sign-up">
-                <Button size="sm">
+                <Button size="sm" className="max-sm:h-11 max-sm:px-4">
                   Get started
                   <Arrow />
                 </Button>
@@ -480,10 +480,10 @@ function SiteFooter() {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8">
-        <Link href="/">
+        <Link href="/" className="flex min-h-11 items-center">
           <Logo />
         </Link>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
+        <nav aria-label="Footer" className="-my-2 flex flex-wrap gap-x-5 max-sm:gap-x-3">
           {[
             ["#tour", "How it works"],
             ["#faq", "Questions"],
@@ -493,7 +493,7 @@ function SiteFooter() {
             <Link
               key={href}
               href={href}
-              className="text-sm text-muted transition-colors duration-[var(--dur-fast)] hover:text-text"
+              className="flex min-h-11 items-center text-sm text-muted transition-colors duration-[var(--dur-fast)] hover:text-text sm:min-h-0"
             >
               {label}
             </Link>

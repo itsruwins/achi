@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Logo } from "@/components/shell/logo";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/pending";
 import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { getSessionUser } from "@/features/auth/queries";
 import { listCards } from "@/features/cards/queries";
@@ -77,7 +78,7 @@ export default async function SharedDeckPage({
               ) : (
                 <form action={importSharedDeck}>
                   <input type="hidden" name="deckId" value={deck.id} />
-                  <Button type="submit">Save a copy</Button>
+                  <SubmitButton>Save a copy</SubmitButton>
                 </form>
               )
             ) : (

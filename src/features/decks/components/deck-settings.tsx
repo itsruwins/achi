@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/pending";
 import { Drawer } from "@/components/ui/drawer";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { GearIcon } from "@/components/ui/icons";
@@ -98,16 +99,16 @@ export function DeckSettings({
             <div className="flex flex-wrap items-center gap-2">
               <form action={togglePin}>
                 <input type="hidden" name="deckId" value={deck.id} />
-                <Button type="submit" variant="secondary" size="sm">
+                <SubmitButton variant="secondary" size="sm">
                   {deck.is_pinned ? "Unpin deck" : "Pin deck"}
-                </Button>
+                </SubmitButton>
               </form>
 
               <form action={duplicateDeck}>
                 <input type="hidden" name="deckId" value={deck.id} />
-                <Button type="submit" variant="secondary" size="sm">
+                <SubmitButton variant="secondary" size="sm">
                   Duplicate
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           </Group>
@@ -299,9 +300,9 @@ function FolderSection({ deck, folders }: { deck: Deck; folders: Folder[] }) {
             ))}
           </Select>
         </div>
-        <Button type="submit" size="sm" variant="secondary">
+        <SubmitButton size="sm" variant="secondary">
           Move
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );

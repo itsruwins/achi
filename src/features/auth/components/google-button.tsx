@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/pending";
 import { signInWithGoogle } from "@/features/auth/actions";
 
 /**
@@ -8,10 +8,10 @@ import { signInWithGoogle } from "@/features/auth/actions";
 export function GoogleButton() {
   return (
     <form action={signInWithGoogle}>
-      <Button type="submit" variant="secondary" className="w-full">
+      <SubmitButton variant="secondary" className="w-full">
         <GoogleMark />
         Continue with Google
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

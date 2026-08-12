@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, IBM_Plex_Mono, Schibsted_Grotesk } from "next/font/google";
+import { Fraunces, IBM_Plex_Mono, Plus_Jakarta_Sans } from "next/font/google";
 
 import { themeBootstrapScript } from "@/components/shell/theme";
 import "./globals.css";
 
 /**
  * Three families on a real contrast axis, rather than two near-identical
- * grotesques. Geist was the previous choice and it's the Next.js default —
- * which is exactly why it reads as "unstyled scaffold" rather than as a brand.
+ * grotesques: a smooth humanist sans for everything you read, a serif for the
+ * few display moments, and a mono strictly for data.
  *
  * Fraunces is a variable serif; SOFT and WONK are pulled to 0 in globals.css so
  * it lands as a confident editorial face rather than the playful cut it ships
@@ -24,10 +24,21 @@ const display = Fraunces({
   display: "swap",
 });
 
-/** Body and UI: an editorial grotesque that holds up at 13px. */
-const sans = Schibsted_Grotesk({
+/**
+ * Body and UI.
+ *
+ * Plus Jakarta Sans over the grotesque this replaced: rounded terminals, open
+ * apertures, and low stroke contrast, so dense screens read as calm rather than
+ * as a wall of edges. It's the smoother counterpart to the rose palette — a
+ * sharp grotesque on blush surfaces reads as a mismatch.
+ *
+ * Variable, so the 200–800 range is one file and `font-medium`/`font-semibold`
+ * interpolate instead of snapping to a shipped weight.
+ */
+const sans = Plus_Jakarta_Sans({
   variable: "--ff-sans",
   subsets: ["latin"],
+  weight: "variable",
   display: "swap",
 });
 

@@ -42,9 +42,18 @@ export function PageHeader({
         </Link>
       ) : null}
 
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      {/*
+        Stacks on phones rather than wrapping. Two or three buttons squeezed
+        beside a title on a 360px screen either overflow or each collapse to a
+        column of one word; below `sm` they get their own full-width row and
+        share it evenly. The descendant `button` rule is what makes that
+        visible: actions arrive variously as a bare Button, a Link wrapping
+        one, or a form wrapping one, so stretching only the direct child would
+        leave the button itself sitting at its natural width inside it.
+      */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-6">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl text-text">{title}</h1>
+          <h1 className="font-display text-xl text-text sm:text-2xl">{title}</h1>
           {description ? (
             <p className="mt-1 max-w-[68ch] text-base text-muted">{description}</p>
           ) : null}
@@ -56,7 +65,9 @@ export function PageHeader({
         </div>
 
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0 max-sm:[&>*]:flex-1 max-sm:[&_button]:w-full">
+            {actions}
+          </div>
         ) : null}
       </div>
     </header>
@@ -193,6 +204,108 @@ export function Toolbar({
 /** Loading placeholder shaped like the content it replaces. */
 export function Skeleton({ className }: { className?: string }) {
   return <div aria-hidden="true" className={cn("skeleton rounded-control", className)} />;
+}
+
+/**
+ * Route-level loading shell.
+ *
+ * Wraps every `loading.tsx` so the whole page announces itself once, as a busy
+ * region, rather than as a screenful of unlabelled grey boxes. The individual
+ * skeletons below are `aria-hidden` for exactly that reason — a screen reader
+ * gets "Loading <page>" and nothing else.
+ *
+ * `animate-[achi-fade-in]` at a slight delay keeps a fast server response from
+ * flashing the skeleton for one frame on its way to the real content.
+ */
+export function LoadingShell({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label={`Loading ${label}`}
+      className="motion-safe:animate-[achi-fade-in_var(--dur)_var(--ease-out)_80ms_both]"
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Skeleton matching `PageHeader` — title, one line of context, actions. */
+export function HeaderSkeleton({ actions = 2 }: { actions?: number }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <div className="min-w-0 flex-1">
+        <Skeleton className="h-7 w-52 max-w-full" />
+        <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+      </div>
+      {actions > 0 ? (
+        <div className="flex shrink-0 items-center gap-2">
+          {Array.from({ length: actions }, (_, i) => (
+            <Skeleton key={i} className="h-9.5 w-28" />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Skeleton matching the deck/community tile grid. */
+export function TileGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="rounded-card border border-border bg-surface p-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="size-9 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="mt-2 h-3 w-full" />
+            </div>
+          </div>
+          <div className="mt-6 flex items-center gap-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="ml-auto h-4.5 w-12 rounded-pill" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Skeleton matching a stack of rows — card lists, member lists, posts. */
+export function RowsSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="overflow-hidden rounded-card border border-border bg-surface">
+      {Array.from({ length: count }, (_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 border-b border-border-subtle p-4 last:border-b-0"
+        >
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-4 w-2/5" />
+            <Skeleton className="mt-2 h-3 w-3/5" />
+          </div>
+          <Skeleton className="size-8 shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Skeleton matching a panel/card with a heading and body. */
+export function PanelSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-card border border-border bg-surface p-4", className)}>
+      <Skeleton className="h-3.5 w-28" />
+      <Skeleton className="mt-4 h-32 w-full" />
+    </div>
+  );
 }
 
 /**

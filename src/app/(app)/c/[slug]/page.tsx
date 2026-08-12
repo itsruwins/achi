@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { SubmitButton, SubmitText } from "@/components/ui/pending";
 import { Badge } from "@/components/ui/chip";
 import { Input, Select, Textarea } from "@/components/ui/field";
 import { Dot, EmptyState, PageHeader, Section } from "@/components/ui/layout";
@@ -85,9 +86,9 @@ export default async function CommunityPage({
             <form action={leaveCommunity}>
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="communityId" value={community.id} />
-              <Button type="submit" variant="ghost">
+              <SubmitButton variant="ghost">
                 Leave
-              </Button>
+              </SubmitButton>
             </form>
           ) : null
         }
@@ -126,7 +127,7 @@ export default async function CommunityPage({
                 className="max-w-xs"
               />
             ) : null}
-            <Button type="submit">Join</Button>
+            <SubmitButton>Join</SubmitButton>
           </form>
         </section>
       ) : (
@@ -184,12 +185,12 @@ export default async function CommunityPage({
                         <input type="hidden" name="slug" value={slug} />
                         {/* Shown to everyone; RLS rejects it unless the caller
                             is the author or the community owner. */}
-                        <button
-                          type="submit"
+                        <SubmitText
+                          pendingLabel="Deleting…"
                           className="text-sm text-subtle opacity-0 transition-[opacity,color] duration-[var(--dur-fast)] hover:text-danger focus-visible:opacity-100 group-hover:opacity-100 max-sm:opacity-100"
                         >
                           Delete
-                        </button>
+                        </SubmitText>
                       </form>
                     </div>
                     <p className="mt-1.5 whitespace-pre-wrap text-base leading-relaxed text-text">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/pending";
 import { EmptyState, PageHeader, Section } from "@/components/ui/layout";
 import { Avatar } from "@/components/shell/user-menu";
 import { requireOnboardedUser } from "@/features/auth/queries";
@@ -71,9 +71,9 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
             <form action={toggleFollow}>
               <input type="hidden" name="userId" value={profile.id} />
               <input type="hidden" name="username" value={profile.username ?? ""} />
-              <Button type="submit" variant={following ? "secondary" : "primary"}>
+              <SubmitButton variant={following ? "secondary" : "primary"}>
                 {following ? "Following" : "Follow"}
-              </Button>
+              </SubmitButton>
             </form>
           )
         }

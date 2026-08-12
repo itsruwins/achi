@@ -43,7 +43,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       */}
       <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-sunken/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
-          <Link href="/decks" className="shrink-0 rounded-control pr-1">
+          <Link href="/decks" className="flex h-14 shrink-0 items-center rounded-control pr-1">
             <Logo compact />
           </Link>
 

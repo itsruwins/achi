@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { Button, IconButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { SubmitIconButton } from "@/components/ui/pending";
 import { Badge } from "@/components/ui/chip";
 import { ArrowUpIcon } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ui/layout";
@@ -184,8 +185,7 @@ function MoveButton({
       <input type="hidden" name="deckId" value={deckId} />
       <input type="hidden" name="cardId" value={cardId} />
       <input type="hidden" name="direction" value={direction} />
-      <IconButton
-        type="submit"
+      <SubmitIconButton
         size="sm"
         disabled={disabled}
         aria-label={label}
@@ -194,7 +194,7 @@ function MoveButton({
         <ArrowUpIcon
           className={cn("size-4", direction === "down" && "rotate-180")}
         />
-      </IconButton>
+      </SubmitIconButton>
     </form>
   );
 }

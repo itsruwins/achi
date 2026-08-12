@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/chip";
 import { PinIcon } from "@/components/ui/icons";
+import { LinkPending } from "@/components/ui/pending";
 import type { Deck } from "@/features/decks/types";
 import { cn } from "@/lib/utils/cn";
 
@@ -74,6 +75,7 @@ export function DeckTile({ deck, due }: { deck: Deck; due?: number }) {
         ) : null}
 
         <span className="ml-auto flex items-center gap-1.5">
+          <LinkPending className="text-primary" />
           {source ? <Badge tone="neutral">{source}</Badge> : null}
           {deck.visibility !== "private" ? (
             <Badge tone={deck.visibility === "public" ? "info" : "neutral"}>

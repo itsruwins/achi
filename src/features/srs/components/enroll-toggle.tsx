@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { ReviewIcon } from "@/components/ui/icons";
+import { SubmitButton } from "@/components/ui/pending";
 import { toggleEnrollment } from "@/features/srs/actions";
 
 /**
@@ -19,8 +19,7 @@ export function EnrollToggle({
   return (
     <form action={toggleEnrollment}>
       <input type="hidden" name="deckId" value={deckId} />
-      <Button
-        type="submit"
+      <SubmitButton
         size="sm"
         variant="ghost"
         title={
@@ -31,7 +30,7 @@ export function EnrollToggle({
       >
         {enrolled ? null : <ReviewIcon className="size-3.5" />}
         {enrolled ? "Stop reviewing" : "Add to review"}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

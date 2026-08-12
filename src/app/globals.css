@@ -585,7 +585,7 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Contextual alternates and kerning on; the grotesque's default figures are
+  /* Contextual alternates and kerning on; the face's default figures are
      proportional, which is right for prose — `.tnum` opts numbers out. */
   font-feature-settings: "kern", "calt";
 }
@@ -671,14 +671,14 @@ p {
 /*
   Tabular figures, so values stop shifting horizontally as they tick.
 
-  Two rules, both learned the hard way in this typeface:
+  Two rules, both learned the hard way:
 
   1. Put it on the number, never on a sentence containing one. Tabular spacing
      applies to punctuation too, so a wrapped paragraph renders
      "124,200 characters." as "124 , 200 characters ."
-  2. Skip it for numbers carrying a thousands separator inline in prose.
-     Schibsted Grotesk's tabular comma is much wider than its proportional one,
-     so "47,520" reads as "47 , 520" even when only the number is wrapped.
+  2. Be wary of it on numbers carrying a thousands separator inline in prose.
+     A tabular comma sits on a full digit-width slot, so "47,520" can open up
+     to read as "47 , 520" even when only the number is wrapped.
 
   What it IS for: values that tick in place or align down a column — progress
   counters, table figures, stat tiles, badge counts.
@@ -748,6 +748,45 @@ p {
   );
   background-size: 200% 100%;
   animation: achi-shimmer 1.4s linear infinite;
+}
+
+/*
+  Navigation hint inside a <Link>.
+
+  Always laid out, never conditionally rendered — an indicator that appears in
+  the flow shifts the row under the cursor at the exact moment of the click.
+  Only opacity animates.
+
+  The 120ms delay is what keeps this from being noise: a prefetched route
+  resolves well inside that window, so the dot never shows for navigations that
+  were already instant. It only appears when there is genuinely a wait.
+*/
+.link-pending {
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  opacity: 0;
+}
+
+.link-pending.is-pending {
+  animation:
+    achi-hint-in 160ms var(--ease-out) 120ms forwards,
+    achi-hint-pulse 1s var(--ease-in-out) 120ms infinite;
+}
+
+@keyframes achi-hint-in {
+  to {
+    opacity: 0.5;
+  }
+}
+
+@keyframes achi-hint-pulse {
+  50% {
+    opacity: 0.18;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

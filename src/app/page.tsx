@@ -132,7 +132,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
         {/*
           The tagline carries the whole hero, so it gets poster scale and the
           contrast is inside the sentence: the claim upright in ink, the turn in
-          the real italic and in jade. Two beats, not three — a recessive third
+          the real italic and in rose. Two beats, not three — a recessive third
           line would soften exactly the thing that makes it land.
         */}
         <h1 className="mt-6 text-6xl text-text sm:text-7xl lg:text-8xl">

@@ -34,14 +34,14 @@ type Item = {
 const STRIP: Item[] = [
   {
     subject: "Biochem",
-    note: "…PFK-1 catalyses the committed step, and is the main control point of glycolysis…",
+    note: "…PFK-1 catalyses the committed step of glycolysis…",
     front: "Which enzyme is the rate-limiting step of glycolysis?",
     back: "Phosphofructokinase-1 — the committed step of the pathway.",
   },
   {
     subject: "Psychology",
     front: "What separates classical from operant conditioning?",
-    back: "Classical pairs two stimuli; operant pairs a behaviour with its consequence.",
+    back: "Classical pairs two stimuli; operant pairs behaviour with consequence.",
   },
   {
     subject: "Nursing",
@@ -66,14 +66,14 @@ const STRIP: Item[] = [
   },
   {
     subject: "Phil History",
-    note: "…at Pugad Lawin in August 1896 the Katipuneros tore up their cédulas…",
+    note: "…at Pugad Lawin, August 1896, the Katipuneros tore up their cédulas…",
     front: "What did the Cry of Pugad Lawin begin?",
     back: "The Philippine Revolution against Spanish rule.",
   },
   {
     subject: "Genetics",
     front: "What does a Punnett square predict?",
-    back: "The genotype ratios of offspring from two known parents.",
+    back: "Genotype ratios of offspring from two known parents.",
   },
 ];
 
@@ -95,7 +95,7 @@ export function SketchStrip() {
         cards at a fixed duration silently speeds the drift up.
       */}
       <div className="sk-marquee overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,black_5rem,black_calc(100%-5rem),transparent)]">
-        <ul className="sk-marquee-track flex w-max animate-[achi-marquee_96s_linear_infinite] items-stretch motion-reduce:animate-none">
+        <ul className="sk-marquee-track flex w-max animate-[achi-marquee_86s_linear_infinite] items-stretch motion-reduce:animate-none">
           {[...STRIP, ...STRIP].map((item, i) => {
             // The second copy exists only so the loop can seam. It's hidden
             // from readers and made inert, because it contains real buttons —
@@ -129,12 +129,12 @@ function Entry({ item, seed }: { item: Item; seed: number }) {
           and deliberately not a card, so it never looks flippable. */}
       <div
         className={cn(
-          "sk-edge sk-cast-sm sk-fill-sunken sk-live h-[9.5rem] w-[13.5rem] px-4 py-3.5",
+          "sk-edge sk-cast-sm sk-fill-sunken sk-live h-[7.75rem] w-[12.5rem] px-3.5 py-3",
           seed % 2 === 0 ? "sk-tilt-a" : "sk-tilt-b",
         )}
       >
         <span className="sk-mono block text-subtle">your notes</span>
-        <p className="mt-1.5 text-[0.9375rem] leading-snug text-muted">
+        <p className="mt-1 text-[0.875rem] leading-snug text-muted">
           {item.note}
         </p>
       </div>
@@ -156,7 +156,7 @@ function FlipCard({ item, seed }: { item: Item; seed: number }) {
   // on the button — a filtered element can't establish a 3D rendering context,
   // and the button is what carries the focus ring and the height.
   const face = cn(
-    "sk-flip-face sk-edge sk-cast-sm sk-live block px-4 py-3.5",
+    "sk-flip-face sk-edge sk-cast-sm sk-live block px-3.5 py-3",
     seed % 3 === 1 && "sk-b",
     seed % 3 === 2 && "sk-c",
   );
@@ -168,21 +168,21 @@ function FlipCard({ item, seed }: { item: Item; seed: number }) {
       aria-pressed={flipped}
       aria-label={`${item.subject} card. ${flipped ? "Showing answer" : "Showing question"}. Activate to flip.`}
       className={cn(
-        "sk-flip block h-[9.5rem] w-[17.5rem] text-left",
+        "sk-flip block h-[7.75rem] w-[16rem] text-left",
         seed % 2 === 0 ? "sk-tilt-b" : "sk-tilt-a",
       )}
     >
       <span className="sk-flip-inner block" data-flipped={flipped}>
         <span className={face}>
           <span className="sk-mono block text-primary">{item.subject}</span>
-          <p className="sk-hand mt-1.5 text-[1.0625rem] leading-snug text-text">
+          <p className="sk-hand mt-1 text-[1rem] leading-snug text-text">
             {item.front}
           </p>
         </span>
 
         <span className={cn(face, "sk-flip-back sk-fill-sunken")}>
           <span className="sk-mono block text-primary">answer</span>
-          <p className="sk-hand mt-1.5 text-[1.0625rem] leading-snug text-text">
+          <p className="sk-hand mt-1 text-[1rem] leading-snug text-text">
             {item.back}
           </p>
         </span>

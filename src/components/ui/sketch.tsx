@@ -88,18 +88,27 @@ export function SketchUnderline({ className }: { className?: string }) {
       preserveAspectRatio="none"
       aria-hidden="true"
       focusable="false"
-      className={cn("pointer-events-none absolute inset-x-0 w-full", className)}
+      className={cn(
+        "sk-underline pointer-events-none absolute inset-x-0 w-full",
+        className,
+      )}
     >
-      {/* pathLength normalises the geometry to 1 unit, so a single
-          stroke-dasharray keyframe drives this and the connector alike with no
-          per-path measuring. */}
+      {/*
+        No dash on this one — it's revealed by a clip-path wipe instead (see the
+        .sk-underline note in sketch.css). `non-scaling-stroke` measures a dash
+        pattern in screen pixels, so any dasharray would be racing the rendered
+        width of the phrase and cropping the wider ones.
+
+        The path runs the full 0–300 of the viewBox rather than insetting to
+        3–297, which was leaving roughly 1% bare at each end. Round caps then
+        overshoot very slightly, which is how a drawn underline actually ends.
+      */}
       <path
-        d="M 3 13 Q 40 5, 78 11 Q 116 17, 154 10 Q 192 3, 230 11 Q 268 17, 297 9"
+        d="M 0 13 Q 38 5, 76 11 Q 114 17, 152 10 Q 190 3, 228 11 Q 266 17, 300 9"
         fill="none"
         stroke="currentColor"
         strokeWidth="3.25"
         strokeLinecap="round"
-        pathLength={1}
         vectorEffect="non-scaling-stroke"
       />
     </svg>

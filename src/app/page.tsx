@@ -218,13 +218,13 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           <h1 className="sk-hand-display text-[3.25rem] text-text sm:text-[4.25rem] lg:text-[4.75rem]">
             You&rsquo;ll forget
             <br />
-            this by Thursday.
+            this by Monday.
             <br />
             {/* The one load-time moment on the page: the line strokes itself
                 under the word rather than simply being there. */}
             <span className="relative inline-block text-primary">
               Unless.
-              <SketchUnderline className="sk-draw sk-draw-load -bottom-[0.06em] h-[0.2em]" />
+              <SketchUnderline className="sk-wipe-load -bottom-[0.06em] h-[0.2em]" />
             </span>
           </h1>
 
@@ -678,7 +678,7 @@ function Closing({ signedIn }: { signedIn: boolean }) {
           <br />
           <span className="relative inline-block text-primary">
             already have
-            <SketchUnderline className="sk-draw sk-draw-view -bottom-[0.06em] h-[0.2em]" />
+            <SketchUnderline className="sk-wipe-view -bottom-[0.06em] h-[0.2em]" />
           </span>
         </h2>
         <p className="mx-auto mt-7 max-w-[42ch] text-[1.0625rem] leading-relaxed text-muted">

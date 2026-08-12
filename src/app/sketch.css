@@ -528,7 +528,7 @@
 */
 @keyframes sk-draw {
   from {
-    stroke-dashoffset: 1;
+    stroke-dashoffset: var(--sk-dash, 1);
   }
   to {
     stroke-dashoffset: 0;
@@ -536,8 +536,68 @@
 }
 
 .sk-draw path {
-  stroke-dasharray: 1;
+  stroke-dasharray: var(--sk-dash, 1);
   stroke-dashoffset: 0;
+}
+
+/*
+  The underline needs its dash measured differently from every other mark, and
+  the reason is worth stating because it cost a visible bug:
+
+  `pathLength="1"` normalises a path to one unit of *user* space. That is exactly
+  right for the connector. It is wrong for the underline, because the underline
+  is the one mark that gets stretched — `preserveAspectRatio="none"` widens it to
+  fit whatever phrase it sits under — while `vector-effect: non-scaling-stroke`
+  deliberately makes the stroke, and with it the dash pattern, ignore that
+  transform. So a dash of "one path length" covers the *unstretched* path and
+  stops short of the rendered one, cropping the line by exactly the stretch
+  factor. Wider phrase, shorter underline.
+
+  Fixed by measuring the dash in the same untransformed user units as the path
+  itself: the geometry spans ~300 units, so 320 always covers it however far the
+  SVG is stretched, and the animation still runs start-to-finish.
+*/
+.sk-underline path {
+  stroke-dasharray: none;
+}
+
+/*
+  Wipe, not dash.
+
+  Every dash-based attempt at this underline was wrong, and the reason is worth
+  keeping: `non-scaling-stroke` measures the dash pattern in *screen pixels*,
+  not user units — that is precisely what the property is for. So any fixed
+  dasharray ends up competing with the rendered width of the phrase, which
+  changes with the words and with the viewport. 320 happened to cover "Unless."
+  at ~265px and cut "already have" at ~376px. There is no correct constant.
+
+  Revealing the SVG with a clip-path instead takes length out of the problem
+  entirely: the line is drawn once, in full, and then uncovered left to right.
+  It cannot crop at any width, and it reads the same as a stroke being drawn.
+*/
+@keyframes sk-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.sk-wipe-load {
+  animation: sk-wipe var(--sk-t-draw) var(--sk-ease) 260ms both;
+}
+
+.sk-wipe-view {
+  animation: sk-wipe var(--sk-t-draw) var(--sk-ease) both;
+}
+
+@supports (animation-timeline: view()) {
+  .sk-wipe-view {
+    animation-timeline: view();
+    animation-range: entry 15% cover 32%;
+    animation-delay: 0s;
+  }
 }
 
 /* On load — the hero underline only. */
@@ -687,6 +747,16 @@
     animation: none !important;
     animation-timeline: auto !important;
     stroke-dashoffset: 0 !important;
+  }
+
+  /* The wipe starts fully clipped, so it has to be released explicitly —
+     leaving it to a fast duration would still hide the mark on a
+     scroll-driven timeline, which has no duration to shorten. */
+  .sk-wipe-load,
+  .sk-wipe-view {
+    animation: none !important;
+    animation-timeline: auto !important;
+    clip-path: none !important;
   }
 
   .sk-rise {

@@ -1,0 +1,462 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sketch system — Phase 1 (landing page only)
+
+   Scoped to `.sk` rather than written into :root, so the app keeps running on
+   the current system until Phase 2 promotes this. Same token-scope trick the
+   codebase already uses for .band-dark: re-point what components consume and
+   they render in the new language with no props and no per-component edits.
+
+   The rose hue survives; the ramp is re-derived. The single biggest change is
+   that this system has an *ink* — a real pen colour. The current palette has
+   no such thing: its borders sit at 1.29:1, which is correct for hairlines and
+   useless for a drawn line.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sk {
+  color-scheme: light;
+
+  /* ── Ground ──────────────────────────────────────────────────────────────
+     Rose-tinted paper. Deliberately not pushed toward cream: warm near-whites
+     are where every hand-drawn interface lands by reflex, and the whole point
+     of keeping the rose hue is that this page should look like Achi's paper,
+     not like a generic notebook. */
+  --bg: oklch(0.976 0.013 350);
+  --surface: oklch(0.996 0.005 350);
+  --surface-sunken: oklch(0.948 0.020 350);
+  --surface-raised: oklch(0.996 0.005 350);
+  --overlay: oklch(0.20 0.030 350 / 0.55);
+
+  /* ── Ink ─────────────────────────────────────────────────────────────────
+     The pen. Rose-bearing rather than black — a neutral ink on blush paper
+     reads as soot, and the hue is the one thing we're keeping. `ink-soft` is
+     the pencil tier for anything drawn *inside* something already drawn;
+     at full weight nested boxes fight their parent. */
+  --ink: oklch(0.262 0.055 352);
+  --ink-soft: oklch(0.585 0.042 352);
+
+  --text: oklch(0.238 0.042 350);
+  --text-muted: oklch(0.448 0.038 352);
+  --text-subtle: oklch(0.528 0.032 352);
+  --text-inverse: oklch(0.988 0.006 350);
+
+  /* Borders answer to the pen now. */
+  --border-subtle: var(--ink-soft);
+  --border: var(--ink);
+  --border-strong: var(--ink);
+
+  /* ── Rose, as a marker ───────────────────────────────────────────────────
+     Same hue, more chroma. A drawn system wants the accent to read as a
+     saturated pen stroke, not as a tint. */
+  --primary: oklch(0.545 0.185 358);
+  --primary-hover: oklch(0.492 0.190 358);
+  --primary-active: oklch(0.442 0.178 358);
+  --primary-fg: oklch(0.992 0.005 350);
+  --primary-subtle: oklch(0.945 0.038 355);
+  --primary-border: var(--ink);
+
+  /* Amber sits at L 0.545 because that is the ceiling for this hue as text —
+     measured, not guessed. Above it, contrast drops under 4.5:1. */
+  --accent: oklch(0.545 0.140 68);
+  --accent-subtle: oklch(0.948 0.045 75);
+  --accent-border: var(--ink);
+
+  --success: oklch(0.512 0.132 158);
+  --success-subtle: oklch(0.945 0.042 158);
+  --warning: oklch(0.545 0.140 68);
+  --warning-subtle: oklch(0.948 0.045 75);
+  --danger: oklch(0.518 0.190 25);
+  --danger-fg: oklch(0.992 0.005 350);
+  --danger-subtle: oklch(0.942 0.038 25);
+  --info: oklch(0.522 0.145 252);
+  --info-subtle: oklch(0.942 0.038 252);
+
+  --hover-wash: oklch(0.26 0.055 352 / 0.06);
+  --active-wash: oklch(0.26 0.055 352 / 0.11);
+  --skeleton-base: oklch(0.920 0.022 350);
+  --skeleton-sheen: oklch(0.958 0.014 350);
+  --selected-wash: var(--primary-subtle);
+  --disabled-opacity: 0.45;
+  --focus-ring: var(--primary);
+  --selection: oklch(0.545 0.185 358 / 0.24);
+  --selection-fg: oklch(0.190 0.050 355);
+
+  /* ── Drawn edge ──────────────────────────────────────────────────────── */
+  --sk-stroke-w: 2px;
+  --sk-radius: 12px;
+  --sk-offset: 5px 5px 0 var(--ink);
+  --sk-offset-sm: 3px 3px 0 var(--ink);
+  --sk-dot: oklch(0.262 0.055 352 / 0.13);
+
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-ui), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Dark canvas ──────────────────────────────────────────────────────────
+   Not a chalkboard. A chalkboard is the reflexive dark partner for anything
+   hand-drawn, and it throws away the rose identity for a school-room metaphor;
+   this is the same drawing surface with the lights down, which is what every
+   real drawing tool ships.
+
+   The values are declared once here as inert `--d-*` sources, so the two dark
+   selectors below are short aliases rather than two more copies of the whole
+   palette. Theming has the same three states as the rest of the app: an
+   explicit data-theme wins in either direction, and the default falls through
+   to prefers-color-scheme. */
+.sk {
+  --d-bg: oklch(0.178 0.020 350);
+  --d-surface: oklch(0.228 0.024 350);
+  --d-sunken: oklch(0.203 0.022 350);
+  --d-raised: oklch(0.265 0.026 350);
+  --d-overlay: oklch(0.12 0.016 350 / 0.7);
+
+  --d-ink: oklch(0.775 0.038 352);
+  /* Raised from 0.455, which measured 2.31:1 on the dark surface — the drawn
+     connectors and section rules were very nearly invisible. 0.530 clears 3:1
+     against both dark grounds while staying clearly a pencil line rather than
+     a second ink. */
+  --d-ink-soft: oklch(0.530 0.032 352);
+
+  --d-text: oklch(0.958 0.012 350);
+  --d-muted: oklch(0.782 0.022 352);
+  --d-subtle: oklch(0.668 0.024 352);
+  --d-inverse: oklch(0.180 0.020 350);
+
+  --d-primary: oklch(0.775 0.135 358);
+  --d-primary-hover: oklch(0.828 0.115 358);
+  --d-primary-active: oklch(0.722 0.140 358);
+  --d-primary-fg: oklch(0.190 0.055 358);
+  --d-primary-subtle: oklch(0.312 0.062 356);
+
+  --d-accent: oklch(0.800 0.130 72);
+  --d-accent-subtle: oklch(0.305 0.058 68);
+  --d-success: oklch(0.760 0.130 158);
+  --d-success-subtle: oklch(0.295 0.052 158);
+  --d-danger: oklch(0.712 0.160 25);
+  --d-danger-fg: oklch(0.180 0.048 25);
+  --d-danger-subtle: oklch(0.315 0.065 25);
+  --d-info: oklch(0.735 0.115 252);
+  --d-info-subtle: oklch(0.300 0.052 252);
+
+  --d-hover: oklch(0.99 0.006 350 / 0.08);
+  --d-active: oklch(0.99 0.006 350 / 0.13);
+  --d-skel: oklch(0.282 0.024 350);
+  --d-skel-sheen: oklch(0.335 0.026 350);
+  --d-selection: oklch(0.775 0.135 358 / 0.32);
+  --d-selection-fg: oklch(0.98 0.014 356);
+
+  /* The offset goes dim, not bright. On a dark ground an offset matching the
+     edge in lightness rings every panel in a glowing double line; depth only
+     reads when the shadow is dimmer than the edge casting it. */
+  --d-offset: 5px 5px 0 oklch(0.520 0.030 352);
+  --d-offset-sm: 3px 3px 0 oklch(0.520 0.030 352);
+  --d-dot: oklch(0.775 0.038 352 / 0.11);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sk {
+    color-scheme: dark;
+
+    --bg: var(--d-bg);
+    --surface: var(--d-surface);
+    --surface-sunken: var(--d-sunken);
+    --surface-raised: var(--d-raised);
+    --overlay: var(--d-overlay);
+    --ink: var(--d-ink);
+    --ink-soft: var(--d-ink-soft);
+    --text: var(--d-text);
+    --text-muted: var(--d-muted);
+    --text-subtle: var(--d-subtle);
+    --text-inverse: var(--d-inverse);
+    --primary: var(--d-primary);
+    --primary-hover: var(--d-primary-hover);
+    --primary-active: var(--d-primary-active);
+    --primary-fg: var(--d-primary-fg);
+    --primary-subtle: var(--d-primary-subtle);
+    --accent: var(--d-accent);
+    --accent-subtle: var(--d-accent-subtle);
+    --success: var(--d-success);
+    --success-subtle: var(--d-success-subtle);
+    --warning: var(--d-accent);
+    --warning-subtle: var(--d-accent-subtle);
+    --danger: var(--d-danger);
+    --danger-fg: var(--d-danger-fg);
+    --danger-subtle: var(--d-danger-subtle);
+    --info: var(--d-info);
+    --info-subtle: var(--d-info-subtle);
+    --hover-wash: var(--d-hover);
+    --active-wash: var(--d-active);
+    --skeleton-base: var(--d-skel);
+    --skeleton-sheen: var(--d-skel-sheen);
+    --selection: var(--d-selection);
+    --selection-fg: var(--d-selection-fg);
+    --sk-offset: var(--d-offset);
+    --sk-offset-sm: var(--d-offset-sm);
+    --sk-dot: var(--d-dot);
+  }
+}
+
+:root[data-theme="dark"] .sk {
+  color-scheme: dark;
+
+  --bg: var(--d-bg);
+  --surface: var(--d-surface);
+  --surface-sunken: var(--d-sunken);
+  --surface-raised: var(--d-raised);
+  --overlay: var(--d-overlay);
+  --ink: var(--d-ink);
+  --ink-soft: var(--d-ink-soft);
+  --text: var(--d-text);
+  --text-muted: var(--d-muted);
+  --text-subtle: var(--d-subtle);
+  --text-inverse: var(--d-inverse);
+  --primary: var(--d-primary);
+  --primary-hover: var(--d-primary-hover);
+  --primary-active: var(--d-primary-active);
+  --primary-fg: var(--d-primary-fg);
+  --primary-subtle: var(--d-primary-subtle);
+  --accent: var(--d-accent);
+  --accent-subtle: var(--d-accent-subtle);
+  --success: var(--d-success);
+  --success-subtle: var(--d-success-subtle);
+  --warning: var(--d-accent);
+  --warning-subtle: var(--d-accent-subtle);
+  --danger: var(--d-danger);
+  --danger-fg: var(--d-danger-fg);
+  --danger-subtle: var(--d-danger-subtle);
+  --info: var(--d-info);
+  --info-subtle: var(--d-info-subtle);
+  --hover-wash: var(--d-hover);
+  --active-wash: var(--d-active);
+  --skeleton-base: var(--d-skel);
+  --skeleton-sheen: var(--d-skel-sheen);
+  --selection: var(--d-selection);
+  --selection-fg: var(--d-selection-fg);
+  --sk-offset: var(--d-offset);
+  --sk-offset-sm: var(--d-offset-sm);
+  --sk-dot: var(--d-dot);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The drawn edge
+
+   Phase A settled the technique. A normal CSS border and fill are drawn on a
+   pseudo-element, and only that layer is passed through an feTurbulence
+   displacement map — so the edge goes organic while the text inside stays
+   perfectly crisp. Filtering the element itself would wobble the content too.
+
+   Why this and not a stretched SVG: turbulence is evaluated in user space, not
+   in the element's own coordinates, so a 12rem chip and a 60rem banner get the
+   same wobble wavelength. The pen behaves like a pen regardless of what it is
+   drawing around. It also respects border-radius, which border-image does not.
+
+   Two rules learned in the proof, both non-obvious:
+
+     · The FILL must live on the filtered layer too. Displacing only the outline
+       leaves a straight-edged fill sitting inside a wobbly line, which reads as
+       a rendering fault. Every filled button would have had it.
+     · Amplitude is absolute, so it is proportionally larger on small elements.
+       Anything short gets `.sk-fine` or it reads lumpy rather than drawn.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sk-edge {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  background: transparent;
+}
+
+.sk-edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--sk-fill, var(--surface));
+  border: var(--sk-stroke-w) solid var(--sk-line, var(--ink));
+  border-radius: var(--sk-radius);
+  box-shadow: var(--sk-cast, none);
+  filter: url(#sk-wob-a);
+  pointer-events: none;
+}
+
+/* Seed variants. A single seed makes every same-sized box wobble identically,
+   which in a grid reads as mechanical repetition — the exact opposite of hand
+   drawn. Cycle these across siblings. */
+.sk-edge.sk-b::before {
+  filter: url(#sk-wob-b);
+}
+.sk-edge.sk-c::before {
+  filter: url(#sk-wob-c);
+}
+.sk-edge.sk-fine::before {
+  filter: url(#sk-wob-fine);
+}
+
+/* Depth. The offset rides the filtered layer, so the shadow is drawn too
+   rather than being a crisp rectangle behind a wobbly box. */
+.sk-cast {
+  --sk-cast: var(--sk-offset);
+}
+.sk-cast-sm {
+  --sk-cast: var(--sk-offset-sm);
+}
+
+.sk-fill-sunken {
+  --sk-fill: var(--surface-sunken);
+}
+.sk-fill-primary {
+  --sk-fill: var(--primary);
+}
+.sk-fill-none {
+  --sk-fill: transparent;
+}
+
+/*
+  The one drenched band.
+
+  Same scope trick one level down: inside it the surface *is* the rose, so the
+  pen has to invert to near-white or the drawn edges read as bruises on it. The
+  offset stays dark — a light edge casting a light shadow has nothing to sit on.
+*/
+.sk-drench {
+  color-scheme: dark;
+
+  --bg: oklch(0.462 0.145 358);
+  --surface: oklch(0.418 0.138 358);
+  --surface-sunken: oklch(0.395 0.132 358);
+
+  --text: oklch(0.988 0.008 350);
+  --text-muted: oklch(0.908 0.045 353);
+  --text-subtle: oklch(0.862 0.052 353);
+
+  --ink: oklch(0.980 0.014 352);
+  /* 0.700 measured 2.75:1 on the rose ground; 0.775 clears 3:1. A rose band
+     eats low-contrast lines faster than a neutral one does. */
+  --ink-soft: oklch(0.775 0.082 356);
+  --border: var(--ink);
+  --border-subtle: var(--ink-soft);
+
+  --primary: oklch(0.988 0.008 350);
+  --primary-fg: oklch(0.330 0.120 358);
+  --primary-subtle: oklch(0.530 0.130 358);
+
+  --sk-offset: 5px 5px 0 oklch(0.298 0.105 358);
+  --sk-offset-sm: 3px 3px 0 oklch(0.298 0.105 358);
+  --sk-dot: oklch(0.988 0.014 352 / 0.16);
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Ground, type, marks
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Dot grid rather than square graph paper: dots read as a working canvas
+   instead of as a school notebook, and they put far less noise behind dense
+   text — which is where this aesthetic is most at risk. */
+.sk-paper {
+  background-image: radial-gradient(var(--sk-dot) 1.4px, transparent 1.5px);
+  background-size: 26px 26px;
+}
+
+/*
+  The hand.
+
+  Shantell's BNCE axis rides the baseline per glyph. Phase A measured the
+  ceiling: 50–100 is alive at poster size, but anything you actually *read*
+  needs to stay at or under 20 — at 50 the bounce starts fighting the line and
+  by 100 it measurably costs legibility. So display and reading get different
+  values rather than one "hand" style.
+*/
+.sk-hand {
+  font-family: var(--ff-hand), ui-sans-serif, system-ui, sans-serif;
+  font-variation-settings: "BNCE" 18;
+}
+
+.sk-hand-display {
+  font-family: var(--ff-hand), ui-sans-serif, system-ui, sans-serif;
+  font-variation-settings: "BNCE" 72;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+
+.sk-mono {
+  font-family: var(--ff-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+/*
+  Tilts.
+
+  Two grades, and the difference matters. A single decorative element can carry
+  a real angle; a *row* of them cannot. At ±1.5° four cards in a grid stop
+  reading as pinned and start reading as a grid that failed to line up, and the
+  body text inside visibly slants. Grid members get the barely-there grade,
+  where the eye reads "placed by hand" before it reads "crooked".
+*/
+.sk-tilt-l {
+  transform: rotate(-1.5deg);
+}
+.sk-tilt-r {
+  transform: rotate(1.6deg);
+}
+.sk-tilt-a {
+  transform: rotate(-0.6deg);
+}
+.sk-tilt-b {
+  transform: rotate(0.7deg);
+}
+
+/*
+  Rising stair for the interval walk.
+
+  The offset lives here rather than in an inline style so it can be dropped
+  below lg: when the row wraps, a per-item vertical offset leaves the wrapped
+  item floating out of sequence with nothing to connect it to.
+*/
+.sk-stair > li {
+  transition: none;
+}
+
+@media (min-width: 1024px) {
+  .sk-stair > li:nth-child(2) {
+    padding-left: 1.75rem;
+  }
+  .sk-stair > li:nth-child(3) {
+    padding-left: 3.5rem;
+  }
+  .sk-stair > li:nth-child(4) {
+    padding-left: 5.25rem;
+  }
+  .sk-stair > li:nth-child(5) {
+    padding-left: 7rem;
+  }
+  .sk-stair > li:nth-child(6) {
+    padding-left: 8.75rem;
+  }
+}
+
+.sk ::selection {
+  background: var(--selection);
+  color: var(--selection-fg);
+}
+
+.sk :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk *,
+  .sk *::before,
+  .sk *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

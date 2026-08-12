@@ -1,114 +1,201 @@
-import Link from "next/link";
-
-import { Logo } from "@/components/shell/logo";
-import { Button } from "@/components/ui/button";
 import {
-  ArrowRightIcon,
-  CheckIcon,
-  CommunityIcon,
-  ImportIcon,
-  PlusIcon,
-  ReviewIcon,
-  SparkIcon,
-  StatsIcon,
-} from "@/components/ui/icons";
+  Atkinson_Hyperlegible_Next,
+  Shantell_Sans,
+  Spline_Sans_Mono,
+} from "next/font/google";
+import Link from "next/link";
+import type { ReactNode } from "react";
+
+import {
+  SketchArrow,
+  SketchCheck,
+  SketchConnector,
+  SketchDefs,
+  SketchUnderline,
+} from "@/components/ui/sketch";
 import { getSessionUser } from "@/features/auth/queries";
-import { DemoCard } from "@/features/marketing/components/demo-card";
-import { Reviews } from "@/features/marketing/components/reviews";
-import { Showcase } from "@/features/marketing/components/showcase";
-import { StatBand } from "@/features/marketing/components/stat-band";
-import { Ticker } from "@/features/marketing/components/ticker";
+import { SketchCard } from "@/features/marketing/components/sketch-card";
+import { cn } from "@/lib/utils/cn";
+
+import "./sketch.css";
 
 /**
- * Landing page.
+ * Landing page — sketch system, Phase 1.
  *
- * Structured as alternating full-bleed value bands rather than one continuous
- * column — the band edges are what give a long marketing page a sense of
- * chapters, and they're the difference between "a page with sections" and a
- * product site.
+ * Fonts load here rather than in the root layout, and `sketch.css` scopes
+ * everything to `.sk`, so the running app is untouched: this page is the only
+ * thing on the new system until Phase 2 promotes it.
  *
- * The hero's right half is the real flashcard component and the tour below runs
- * on the real primitives, so neither can drift from the product it advertises.
+ * The composition is a worked canvas rather than a stack of bands — things
+ * pinned to a surface, annotated in the margin, joined by drawn arrows. That
+ * shape is why this couldn't have been reached by restyling the old page: the
+ * old one is a column of full-bleed sections, and the point here is that the
+ * page reads as one surface somebody worked on.
  */
+
+/** Body and UI. Legibility-first, which is the argument for it in a study
+ *  tool: the entire risk of a drawn aesthetic is what it does to dense
+ *  reading, so the face carrying that reading should be the safest one. */
+const ui = Atkinson_Hyperlegible_Next({
+  variable: "--ff-ui",
+  subsets: ["latin"],
+  weight: "variable",
+  display: "swap",
+  // next/font has no metrics for this family, so it can't synthesise a
+  // size-adjusted fallback and the build says so. Without an explicit stack the
+  // swap would reflow noticeably. Verdana is the closest widely-installed face
+  // by x-height and width, which is what actually governs the shift — it does
+  // not remove it, but it makes it small rather than obvious.
+  fallback: ["Verdana", "system-ui", "sans-serif"],
+});
+
+/** The hand. BNCE is driven from CSS — 72 at display, 18 at reading size. */
+const hand = Shantell_Sans({
+  variable: "--ff-hand",
+  subsets: ["latin"],
+  weight: "variable",
+  axes: ["BNCE"],
+  display: "swap",
+});
+
+/** Labels and figures only. */
+const mono = Spline_Sans_Mono({
+  variable: "--ff-mono",
+  subsets: ["latin"],
+  weight: "variable",
+  display: "swap",
+});
+
 export default async function Home() {
   const user = await getSessionUser();
+  const signedIn = Boolean(user);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader signedIn={Boolean(user)} />
+    <div
+      className={cn(
+        ui.variable,
+        hand.variable,
+        mono.variable,
+        "sk sk-paper flex min-h-full flex-1 flex-col",
+      )}
+    >
+      <SketchDefs />
+      <Header signedIn={signedIn} />
 
       <main className="flex-1">
-        <Hero signedIn={Boolean(user)} />
-        <Ticker />
-        <CapabilityBand />
-        <TourSection />
-        <StatBand />
-        <ScheduleSection />
-        <Reviews />
-        <FaqSection />
-        <ClosingBand signedIn={Boolean(user)} />
+        <Hero signedIn={signedIn} />
+        <SampleStrip />
+        <Loop />
+        <Modes />
+        <Schedule />
+        <Numbers />
+        <Faq />
+        <Closing signedIn={signedIn} />
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
+/* ── shared ────────────────────────────────────────────────────────────── */
 
-function SiteHeader({ signedIn }: { signedIn: boolean }) {
+const SHELL = "mx-auto w-full max-w-6xl px-5";
+
+/**
+ * Landing-page button.
+ *
+ * Local rather than the app's `<Button>`: the drawn edge is a pseudo-element
+ * treatment, not a token, so the shared component can't inherit it from the
+ * scope the way colours and radii do. Phase 2 rebuilds the real one.
+ */
+function SkButton({
+  children,
+  href,
+  tone = "primary",
+  size = "md",
+}: {
+  children: ReactNode;
+  href: string;
+  tone?: "primary" | "plain";
+  size?: "md" | "lg";
+}) {
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-bg/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-5">
-        <Link href="/" className="flex h-14 shrink-0 items-center">
-          <Logo />
+    <Link
+      href={href}
+      className={cn(
+        "sk-edge sk-cast-sm sk-fine inline-flex items-center justify-center gap-2 font-semibold",
+        "transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "hover:-translate-y-0.5 active:translate-y-px",
+        size === "lg"
+          ? "min-h-[3.25rem] px-6 text-[1.0625rem]"
+          : "min-h-11 px-4 text-[0.9375rem]",
+        tone === "primary" ? "sk-fill-primary text-[var(--primary-fg)]" : "text-text",
+      )}
+      style={{ ["--sk-radius" as string]: "11px" }}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/** Section marker. One tracked mono label per section, paired with a drawn
+ *  rule — a single device used consistently, not an eyebrow above every
+ *  heading pretending to be structure. */
+function Rule({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="sk-mono shrink-0">{label}</span>
+      <span
+        aria-hidden="true"
+        className="h-px flex-1"
+        style={{ background: "var(--ink-soft)" }}
+      />
+    </div>
+  );
+}
+
+/* ── header ────────────────────────────────────────────────────────────── */
+
+function Header({ signedIn }: { signedIn: boolean }) {
+  return (
+    <header className="relative z-20">
+      <div className={cn(SHELL, "flex h-20 items-center gap-4")}>
+        <Link href="/" className="sk-hand-display text-[1.75rem] text-text">
+          Achi
         </Link>
 
-        {/*
-          Section anchors, centred. They exist so a visitor can skip to the part
-          they care about instead of scrolling the whole page — which is the
-          only reason a marketing nav should exist.
-        */}
         <nav
           aria-label="Sections"
-          className="mx-auto hidden items-center gap-1 md:flex"
+          className="mx-auto hidden items-center gap-6 md:flex"
         >
           {[
-            ["#tour", "How it works"],
-            ["#schedule", "Scheduling"],
-            ["#faq", "Questions"],
+            ["#loop", "how it works"],
+            ["#schedule", "scheduling"],
+            ["#faq", "questions"],
           ].map(([href, label]) => (
             <a
               key={href}
               href={href}
-              className="rounded-control px-3 py-1.5 text-base text-muted transition-colors duration-[var(--dur-fast)] hover:bg-hover-wash hover:text-text"
+              className="sk-hand text-lg text-muted transition-colors hover:text-text"
             >
               {label}
             </a>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
+        <div className="ml-auto flex items-center gap-2.5 md:ml-0">
           {signedIn ? (
-            <Link href="/decks">
-              <Button size="sm" className="max-sm:h-11 max-sm:px-4">
-                Your decks
-                <Arrow />
-              </Button>
-            </Link>
+            <SkButton href="/decks">your decks</SkButton>
           ) : (
             <>
-              <Link href="/sign-in">
-                <Button variant="ghost" size="sm" className="max-sm:h-11 max-sm:px-4">
-                  Sign in
-                </Button>
+              <Link
+                href="/sign-in"
+                className="sk-hand hidden min-h-11 items-center px-2 text-lg text-muted transition-colors hover:text-text sm:inline-flex"
+              >
+                sign in
               </Link>
-              <Link href="/sign-up">
-                <Button size="sm" className="max-sm:h-11 max-sm:px-4">
-                  Get started
-                  <Arrow />
-                </Button>
-              </Link>
+              <SkButton href="/sign-up">get started</SkButton>
             </>
           )}
         </div>
@@ -117,481 +204,536 @@ function SiteHeader({ signedIn }: { signedIn: boolean }) {
   );
 }
 
+/* ── hero ──────────────────────────────────────────────────────────────── */
+
 function Hero({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className="hero-wash overflow-hidden">
-      <div className="mx-auto w-full max-w-4xl px-5 pt-14 text-center sm:pt-20">
-        {/*
-          One masthead line, at the top of the page only. A small tracked mono
-          label above *every* section is scaffolding; a single one here is a
-          brand device, and it's the one place the mono face earns its keep
-          outside data labels.
-        */}
-        <p className="label-data">Achi · on recall</p>
+    <section className={cn(SHELL, "pb-20 pt-6 sm:pt-10 lg:pb-28")}>
+      {/*
+        Asymmetric and overlapping rather than a centred column. The old hero
+        centred everything and stacked the card underneath; here the text and
+        the card share a row and the annotation crosses between them, which is
+        what makes it read as one worked surface instead of two blocks.
+      */}
+      <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
+        <div className="relative">
+          <h1 className="sk-hand-display text-[3.25rem] text-text sm:text-[4.25rem] lg:text-[4.75rem]">
+            You&rsquo;ll forget
+            <br />
+            this by Thursday.
+            <br />
+            <span className="relative inline-block text-primary">
+              Unless.
+              <SketchUnderline className="-bottom-[0.06em] h-[0.2em]" />
+            </span>
+          </h1>
 
-        {/*
-          The tagline carries the whole hero, so it gets poster scale and the
-          contrast is inside the sentence: the claim upright in ink, the turn in
-          the real italic and in rose. Two beats, not three — a recessive third
-          line would soften exactly the thing that makes it land.
-        */}
-        <h1 className="mt-6 text-6xl text-text sm:text-7xl lg:text-8xl">
-          <span className="font-display block">Forget less.</span>
-          <span className="font-display-italic block text-primary">
-            On purpose.
-          </span>
-        </h1>
+          <p className="mt-9 max-w-[44ch] text-[1.0625rem] leading-relaxed text-muted sm:text-[1.15rem]">
+            Paste your notes and get flashcards back in about twenty seconds.
+            Achi then works out which cards are slipping, and puts those in front
+            of you — and nothing else.
+          </p>
 
-        <p className="mx-auto mt-7 max-w-[46ch] text-lg leading-relaxed text-muted sm:text-xl">
-          Paste a chapter or upload a lecture deck and get flashcards back in
-          seconds. Achi then schedules every card for the day you&rsquo;re about
-          to forget it.
-        </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <SkButton href={signedIn ? "/decks" : "/sign-up"} size="lg">
+              {signedIn ? "go to your decks" : "make your first deck"}
+            </SkButton>
+            <a
+              href="#loop"
+              className="sk-hand inline-flex min-h-[3.25rem] items-center px-2 text-xl text-text underline decoration-2 underline-offset-[6px] transition-colors hover:text-primary"
+              style={{ textDecorationColor: "var(--ink-soft)" }}
+            >
+              see how it works
+            </a>
+          </div>
 
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          {signedIn ? (
-            <Link href="/decks">
-              <Button size="lg">
-                Go to your decks
-                <Arrow />
-              </Button>
-            </Link>
-          ) : (
-            <>
-              <Link href="/sign-up">
-                <Button size="lg">
-                  Start free
-                  <Arrow />
-                </Button>
-              </Link>
-              <a href="#tour">
-                <Button size="lg" variant="secondary">
-                  See how it works
-                </Button>
-              </a>
-            </>
-          )}
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2.5">
+            {[
+              "free — no card, ever",
+              "export any time",
+              "works on your phone",
+            ].map((claim) => (
+              <li
+                key={claim}
+                className="flex items-center gap-2 text-base text-muted"
+              >
+                <SketchCheck className="size-4 shrink-0 text-primary" />
+                {claim}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <ul className="mx-auto mt-5 flex max-w-md flex-col items-center gap-y-2 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-5">
-          {[
-            "Free — no card, no trial",
-            "Your cards export any time",
-            "Works on your phone",
-          ].map((claim) => (
+        {/* The card, pinned. The annotation lives in the gutter on wide screens
+            and is dropped below lg, where there is no gutter for it and it
+            would just be a stray line of text over the card. */}
+        <div className="relative flex justify-center lg:justify-end">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-4 -top-10 hidden w-40 -rotate-[7deg] lg:block xl:-left-14"
+          >
+            <p className="sk-hand text-lg leading-snug text-subtle">
+              this one&rsquo;s real — go on, flip it
+            </p>
+            <SketchArrow className="ml-10 mt-1 h-9 w-20 text-subtle" />
+          </div>
+
+          <SketchCard />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── sample strip ──────────────────────────────────────────────────────── */
+
+const SAMPLES: [string, string][] = [
+  [
+    "Anatomy",
+    "Which nerve carries taste from the anterior two-thirds of the tongue?",
+  ],
+  ["Org. Chem", "SN1 or SN2 — which favours a tertiary substrate?"],
+  ["Consti Law", "What must a warrant be supported by?"],
+  ["Microecon", "Define price elasticity of demand."],
+  ["Pharmacology", "Which beta blockers are cardioselective?"],
+  ["Phil. History", "What did the Malolos Constitution establish?"],
+];
+
+/**
+ * Sample questions drifting past.
+ *
+ * The track holds two identical copies and translates by exactly -50%, so the
+ * loop lands on a frame identical to its start. The duplicate is aria-hidden,
+ * so a screen reader gets the list once.
+ */
+function SampleStrip() {
+  return (
+    <div
+      className="overflow-hidden border-y-2 py-3.5"
+      style={{ borderColor: "var(--ink)", background: "var(--surface-sunken)" }}
+    >
+      <div className="relative [mask-image:linear-gradient(90deg,transparent,black_5rem,black_calc(100%-5rem),transparent)]">
+        <ul className="flex w-max animate-[achi-marquee_52s_linear_infinite] items-center motion-reduce:animate-none">
+          {[...SAMPLES, ...SAMPLES].map(([subject, question], i) => (
             <li
-              key={claim}
-              className="flex items-center gap-1.5 text-sm text-muted"
+              key={`${subject}-${i}`}
+              className="flex shrink-0 items-center gap-3 pr-10"
+              aria-hidden={i >= SAMPLES.length || undefined}
             >
-              <CheckIcon className="size-3.5 shrink-0 text-primary" />
-              {claim}
+              <span className="sk-mono shrink-0 text-primary">{subject}</span>
+              <span className="sk-hand whitespace-nowrap text-lg text-muted">
+                {question}
+              </span>
             </li>
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+/* ── the loop ──────────────────────────────────────────────────────────── */
+
+const STEPS: [string, string, string][] = [
+  [
+    "01",
+    "you paste",
+    "Notes, a PDF, a Word file, a slide deck. Up to 20 MB — or just type it in.",
+  ],
+  [
+    "02",
+    "it writes",
+    "Questions and answers, kept in your source's exact wording when you ask for that.",
+  ],
+  [
+    "03",
+    "you rate",
+    "Again, Hard, Good, Easy. That is the entire input it needs from you.",
+  ],
+  [
+    "04",
+    "it schedules",
+    "Every card comes back on the day you were about to lose it, and not before.",
+  ],
+];
+
+function Loop() {
+  return (
+    <section id="loop" className={cn(SHELL, "scroll-mt-8 py-20 lg:py-28")}>
+      <Rule label="the loop" />
+
+      <h2 className="sk-hand-display mt-6 max-w-[16ch] text-[2.5rem] text-text sm:text-[3.25rem]">
+        How a deck actually happens
+      </h2>
+      <p className="mt-4 max-w-[52ch] text-[1.0625rem] leading-relaxed text-muted">
+        Four steps, and you only do two of them.
+      </p>
 
       {/*
-        The live card sits below the fold line on most screens, cropped by the
-        section edge — enough of it shows to read as a real card and to say
-        there is more page below, without spending a screen on it.
+        Connectors only at lg, where the four steps genuinely sit in a row.
+
+        At the 2-column breakpoint the flow goes right, then wraps down — so a
+        single arrow direction is wrong for half of them, and the first build
+        drew a down-arrow after step 1 that pointed at step 3. Below lg the
+        01–04 markers carry the sequence on their own, which is enough.
       */}
-      <div className="mx-auto mt-14 w-full max-w-lg px-5 pb-16 sm:mt-16 sm:pb-20">
-        <DemoCard />
-      </div>
-    </section>
-  );
-}
-
-/**
- * First inverted band.
- *
- * Deliberately not a 2×2 of identical icon cards — the AI path is the one most
- * people come for, so it gets a worked before/after and twice the width. Equal
- * boxes for unequal things is what turns a feature section into filler.
- */
-function CapabilityBand() {
-  return (
-    <section className="band-dark border-y border-border">
-      <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
-        <div className="max-w-[46ch]">
-          <h2 className="font-display text-3xl text-text">
-            Three ways a deck gets made
-          </h2>
-          <p className="mt-3 text-lg leading-relaxed text-muted">
-            However the material reaches you, it ends up as the same thing: a
-            deck you can study and schedule.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-3 lg:grid-cols-[1.55fr_1fr]">
-          <Feature
-            icon={<SparkIcon className="size-4" />}
-            title="From your own material"
-            body="Paste notes or drop a PDF, Word file, or slide deck. Ask for answers in your source's exact words when you'll be marked on its definitions, or let it rephrase when you just need the idea to land."
-          >
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              <ExampleLine
-                label="Your notes"
-                text="…the chorda tympani branch of CN VII carries taste from the anterior ⅔ of the tongue…"
-              />
-              <ExampleLine
-                label="Card it writes"
-                text="Which nerve carries taste from the anterior two-thirds of the tongue?"
-                accent
-              />
+      <ol className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        {STEPS.map(([num, title, body], i) => (
+          <li key={num} className="relative">
+            <div
+              className={cn(
+                "sk-edge sk-cast h-full p-5",
+                i % 3 === 1 && "sk-b",
+                i % 3 === 2 && "sk-c",
+              )}
+            >
+              <span className="sk-mono block text-primary">{num}</span>
+              <h3 className="sk-hand mt-2.5 text-[1.5rem] leading-tight text-text">
+                {title}
+              </h3>
+              <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted">
+                {body}
+              </p>
             </div>
-          </Feature>
 
-          {/* Stacked in their own column so both stretch to the tall card's
-              height instead of leaving a ragged step in the grid. */}
-          <div className="grid gap-3">
-            <Feature
-              icon={<ImportIcon className="size-4" />}
-              title="From a file you already have"
-              body="CSV, JSON, or an Anki .apkg — imported with its topics intact. Export the same way whenever you want your cards back out."
-            />
-
-            <Feature
-              icon={<CommunityIcon className="size-4" />}
-              title="From someone else"
-              body="Make a deck public, share a link, or start a community for your class. Anyone can study it; nobody can edit yours."
-            />
-          </div>
-        </div>
-      </div>
+            {i < STEPS.length - 1 ? (
+              <SketchConnector
+                aria-hidden="true"
+                className="absolute left-full top-1/2 hidden h-5 w-9 -translate-y-1/2 translate-x-[0.375rem] text-[var(--ink-soft)] lg:block"
+              />
+            ) : null}
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
 
-function TourSection() {
-  return (
-    <section id="tour" className="scroll-mt-16">
-      <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
-        <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
-          <h2 className="font-display max-w-[20ch] text-3xl text-text">
-            Four ways to study, one deck
-          </h2>
-          <p className="max-w-[42ch] text-base leading-relaxed text-muted lg:pt-1.5">
-            Switch between them based on what you need — recognition, recall, or
-            an explanation. They all read from the same cards.
-          </p>
-        </div>
+/* ── modes ─────────────────────────────────────────────────────────────── */
 
-        <div className="mt-8">
-          <Showcase />
-        </div>
-      </div>
-    </section>
-  );
-}
+const MODES: [string, string][] = [
+  [
+    "Flashcards",
+    "Front, back, flip. Rate how well you knew it and the card schedules itself.",
+  ],
+  [
+    "Quiz",
+    "Multiple choice, true/false and fill-in-the-blank, written from your own cards.",
+  ],
+  [
+    "Tutor",
+    "Ask why an answer is what it is. It has your deck as context, so it stays on your material.",
+  ],
+  [
+    "Generate",
+    "Paste a chapter or upload a file, and edit the draft deck before anything saves.",
+  ],
+];
 
-function ScheduleSection() {
+function Modes() {
   return (
     <section
-      id="schedule"
-      className="scroll-mt-16 border-t border-border bg-sunken"
+      className="border-y-2 py-20 lg:py-28"
+      style={{ borderColor: "var(--ink)", background: "var(--surface-sunken)" }}
     >
-      <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-          <div>
-            <h2 className="font-display max-w-[18ch] text-3xl text-text">
-              Then it decides when you see them
-            </h2>
-            <p className="mt-4 max-w-[54ch] text-lg leading-relaxed text-muted">
-              Every card you rate moves onto its own schedule. Something you
-              nailed comes back in a month; something you blanked on comes back
-              tomorrow. You review what&rsquo;s due and nothing else, so a deck
-              of six hundred cards still takes ten minutes.
-            </p>
+      <div className={SHELL}>
+        <Rule label="studying" />
 
-            {/* A concrete interval walk-through beats another paragraph about
-                "spaced repetition" — this is the whole mechanism in one line. */}
-            <ol className="mt-6 flex flex-wrap items-center gap-1.5">
-              {["1 day", "3 days", "1 week", "3 weeks", "2 months"].map(
-                (step, index) => (
-                  <li key={step} className="flex items-center gap-1.5">
-                    {index > 0 ? (
-                      <span aria-hidden="true" className="text-border-strong">
-                        →
-                      </span>
-                    ) : null}
-                    <span className="tnum rounded-pill border border-primary-border bg-primary-subtle px-2.5 py-1 text-sm font-medium text-primary">
-                      {step}
-                    </span>
-                  </li>
-                ),
-              )}
-            </ol>
-            <p className="mt-2 text-sm text-subtle">
-              Each &ldquo;Good&rdquo; rating pushes the next sighting further
-              out. A miss resets it.
-            </p>
-          </div>
-
-          <dl className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-            <Point
-              icon={<ReviewIcon className="size-4" />}
-              term="Four ratings, not a score"
-              detail="Again, Hard, Good, Easy. Honest ratings make the schedule work; a percentage doesn't."
-            />
-            <Point
-              icon={<StatsIcon className="size-4" />}
-              term="Stats you'd act on"
-              detail="What's coming up, which cards keep failing, and how far your cards have matured."
-            />
-            <Point
-              icon={<SparkIcon className="size-4" />}
-              term="A tutor that read your deck"
-              detail="Ask why an answer is what it is, and get a reply scoped to the cards in front of you."
-            />
-            <Point
-              icon={<ImportIcon className="size-4" />}
-              term="Never locked in"
-              detail="Export any deck to JSON or CSV whenever you want. Your cards stay yours."
-            />
-          </dl>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/**
- * FAQ instead of testimonials.
- *
- * A new product has no users to quote, and inventing quotes would be a
- * fabricated endorsement. The questions people actually stall on before signing
- * up do the same job honestly.
- *
- * Built on <details> so it works with no JavaScript and stays accessible.
- */
-function FaqSection() {
-  const faqs: [string, React.ReactNode][] = [
-    [
-      "Is it actually free, or free for now?",
-      "Free. There is no billing in the app at all — no plans, no card on file, no feature behind a paywall. The AI features have a daily cap because they cost money to run; everything else is unlimited.",
-    ],
-    [
-      "Do I need an account?",
-      "Yes, to save anything. Your decks live in your account so they're on your phone and laptop alike. Email and a password is enough — no verification hoops beyond confirming the address.",
-    ],
-    [
-      "What can I upload?",
-      "PDF, Word, PowerPoint, and plain text for AI generation, up to 20 MB. For importing an existing deck: CSV, JSON, or an Anki .apkg. Scanned pages won't work — there's no text layer to read.",
-    ],
-    [
-      "Will the AI make things up?",
-      "It can, like any model. That's why you review the draft before it saves, and why you can ask for the answers in your source's exact words rather than letting it paraphrase. Check anything you'd be marked down for.",
-    ],
-    [
-      "Can I get my cards back out?",
-      "Any deck exports to JSON or CSV from its settings. JSON round-trips back into Achi with topics and hints intact; CSV opens in a spreadsheet.",
-    ],
-    [
-      "What happens to what I paste in?",
-      "Text you generate from is sent to Groq to write the cards and isn't stored by Achi. Your decks and cards are stored in your account, and nobody else can read them unless you make a deck public or share a link.",
-    ],
-  ];
-
-  return (
-    <section id="faq" className="scroll-mt-16 border-t border-border">
-      <div className="mx-auto w-full max-w-6xl px-5 py-16 lg:py-20">
-        <h2 className="font-display text-3xl text-text">
-          Before you sign up
+        <h2 className="sk-hand-display mt-6 max-w-[18ch] text-[2.5rem] text-text sm:text-[3.25rem]">
+          Four ways into the same deck
         </h2>
-
-        <div className="mt-8 grid gap-x-6 gap-y-2 lg:grid-cols-2">
-          {faqs.map(([question, answer], index) => (
-            <details
-              key={question}
-              open={index === 0}
-              className="group rounded-card border border-border bg-surface px-4 transition-colors duration-[var(--dur-fast)] hover:border-border-strong"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3.5 text-md font-medium text-text [&::-webkit-details-marker]:hidden">
-                {question}
-                <span
-                  aria-hidden="true"
-                  className="grid size-5 shrink-0 place-items-center rounded-pill text-subtle transition-transform duration-[var(--dur)] ease-[var(--ease-out)] group-open:rotate-45"
-                >
-                  <PlusIcon className="size-4" />
-                </span>
-              </summary>
-              <p className="max-w-[62ch] pb-4 text-base leading-relaxed text-muted">
-                {answer}
-              </p>
-            </details>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ClosingBand({ signedIn }: { signedIn: boolean }) {
-  return (
-    <section className="band-dark border-t border-border">
-      <div className="mx-auto w-full max-w-6xl px-5 py-20 text-center lg:py-24">
-        <h2 className="mx-auto max-w-[18ch] text-3xl text-text sm:text-4xl">
-          <span className="font-display">Make your first deck </span>
-          <span className="font-display-italic text-primary">
-            in about a minute
-          </span>
-        </h2>
-        <p className="mx-auto mt-4 max-w-[52ch] text-lg leading-relaxed text-muted">
-          Bring the notes you already have. You&rsquo;ll have cards before
-          you&rsquo;ve finished deciding whether this was worth it.
+        <p className="mt-4 max-w-[52ch] text-[1.0625rem] leading-relaxed text-muted">
+          Pick by what you need — recognition, recall, or an explanation. They
+          all read from the cards you already have.
         </p>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href={signedIn ? "/decks" : "/sign-up"}>
-            <Button size="lg">
-              {signedIn ? "Go to your decks" : "Start free"}
-              <Arrow />
-            </Button>
-          </Link>
-          {signedIn ? null : (
-            <Link href="/sign-in">
-              <Button size="lg" variant="secondary">
-                Sign in
-              </Button>
-            </Link>
-          )}
-        </div>
-
-        <ul className="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-2">
-          {["No card required", "Export any time", "Import from Anki"].map(
-            (claim) => (
-              <li
-                key={claim}
-                className="flex items-center gap-1.5 text-sm text-muted"
-              >
-                <CheckIcon className="size-3.5 shrink-0 text-primary" />
-                {claim}
-              </li>
-            ),
-          )}
+        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {MODES.map(([title, body], i) => (
+            <li
+              key={title}
+              className={cn(
+                "sk-edge sk-cast p-5",
+                i % 3 === 1 && "sk-b",
+                i % 3 === 2 && "sk-c",
+                // The barely-there grade. A row of four at the full tilt reads
+                // as a grid that failed to align, and slants the body text
+                // inside with it.
+                i % 2 === 0 ? "sk-tilt-a" : "sk-tilt-b",
+              )}
+            >
+              <h3 className="sk-hand text-[1.5rem] leading-tight text-text">
+                {title}
+              </h3>
+              <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted">
+                {body}
+              </p>
+            </li>
+          ))}
         </ul>
       </div>
     </section>
   );
 }
 
-function SiteFooter() {
+/* ── schedule ──────────────────────────────────────────────────────────── */
+
+const INTERVALS = ["1 day", "3 days", "1 week", "3 weeks", "2 months", "6 months"];
+
+function Schedule() {
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8">
-        <Link href="/" className="flex min-h-11 items-center">
-          <Logo />
+    <section id="schedule" className={cn(SHELL, "scroll-mt-8 py-20 lg:py-28")}>
+      <Rule label="scheduling" />
+
+      <div className="mt-6 grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
+        <div>
+          <h2 className="sk-hand-display max-w-[16ch] text-[2.5rem] text-text sm:text-[3.25rem]">
+            The gap widens every time you get it right
+          </h2>
+          <p className="mt-5 max-w-[50ch] text-[1.0625rem] leading-relaxed text-muted">
+            Something you nailed comes back in a month. Something you blanked on
+            comes back tomorrow. You review what&rsquo;s due and nothing else,
+            which is why a deck of six hundred cards still takes ten minutes.
+          </p>
+          <p className="sk-hand mt-7 max-w-[38ch] text-xl leading-snug text-text">
+            one &ldquo;good&rdquo; pushes the next sighting further out. one miss
+            drags it back to tomorrow.
+          </p>
+        </div>
+
+        {/*
+          The interval walk as a descending stair — the mechanism in one
+          picture rather than another paragraph about spaced repetition.
+
+          One item per row with a growing indent, rather than a wrapping
+          horizontal row. The first attempt was horizontal and the last interval
+          wrapped onto its own line, landing out of sequence with nothing
+          connecting it. A stair that reads top-to-bottom can't wrap wrong, and
+          it works at any width — the indent simply flattens on small screens.
+        */}
+        <ol className="sk-stair space-y-3.5">
+          {INTERVALS.map((step, i) => (
+            <li key={step} className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "sk-edge sk-cast-sm sk-fine whitespace-nowrap px-3.5 py-2 text-[0.9375rem] font-semibold text-text",
+                  i % 3 === 1 && "sk-b",
+                  i % 3 === 2 && "sk-c",
+                )}
+                style={{ ["--sk-radius" as string]: "9px" }}
+              >
+                {step}
+              </span>
+              {i === INTERVALS.length - 1 ? (
+                <span className="sk-hand text-lg text-subtle">
+                  &hellip; and out
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+/* ── numbers ───────────────────────────────────────────────────────────── */
+
+const FIGURES: [string, string, string][] = [
+  ["40k", "characters", "per generation"],
+  ["~20s", "to draft", "a full deck"],
+  ["10 yr", "longest interval", "a card can reach"],
+];
+
+/**
+ * The one drenched band.
+ *
+ * These are facts about what the software does, not how many people use it. A
+ * new product has no user count to quote, and inventing one is exactly where a
+ * numbers band goes wrong.
+ */
+function Numbers() {
+  return (
+    <section
+      className="sk-drench sk-paper border-y-2"
+      style={{ borderColor: "var(--ink)" }}
+    >
+      <div className={cn(SHELL, "py-20 lg:py-24")}>
+        <h2 className="sk-hand-display max-w-[18ch] text-[2.5rem] text-text sm:text-[3rem]">
+          The whole loop, in three numbers
+        </h2>
+
+        <dl className="mt-12 grid gap-7 sm:grid-cols-3">
+          {FIGURES.map(([figure, label, sub], i) => (
+            <div
+              key={figure}
+              className={cn(
+                "sk-edge sk-cast sk-fill-none p-6",
+                i % 3 === 1 && "sk-b",
+                i % 3 === 2 && "sk-c",
+              )}
+            >
+              <dt className="sr-only">{`${label} ${sub}`}</dt>
+              <dd>
+                <span className="sk-hand-display block text-[3rem] leading-none text-text sm:text-[3.5rem]">
+                  {figure}
+                </span>
+                <span className="mt-3 block text-[1.0625rem] text-text">
+                  {label}
+                </span>
+                <span className="mt-0.5 block text-[0.9375rem] text-subtle">
+                  {sub}
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/* ── faq ───────────────────────────────────────────────────────────────── */
+
+const FAQS: [string, string][] = [
+  [
+    "Is it actually free, or free for now?",
+    "Free. There is no billing in the app at all — no plans, no card on file, nothing behind a paywall. The AI features have a daily cap because they cost money to run; everything else is unlimited.",
+  ],
+  [
+    "Do I need an account?",
+    "To save anything, yes. Your decks live in your account so they're on your phone and your laptop alike. An email and a password is enough.",
+  ],
+  [
+    "What can I upload?",
+    "PDF, Word, PowerPoint and plain text for generation, up to 20 MB. For importing a deck you already have: CSV, JSON, or an Anki .apkg. Scanned pages won't work — there's no text layer to read.",
+  ],
+  [
+    "Will the AI make things up?",
+    "It can, like any model. That's why you review the draft before it saves, and why you can ask for answers in your source's exact words instead of letting it paraphrase. Check anything you'd be marked down for.",
+  ],
+  [
+    "Can I get my cards back out?",
+    "Any deck exports to JSON or CSV from its settings. JSON round-trips back into Achi with topics and hints intact; CSV opens in a spreadsheet.",
+  ],
+  [
+    "What happens to what I paste in?",
+    "Text you generate from is sent to Groq to write the cards, and isn't stored by Achi. Your decks and cards live in your account, and nobody else can read them unless you make a deck public or share a link.",
+  ],
+];
+
+function Faq() {
+  return (
+    <section id="faq" className={cn(SHELL, "scroll-mt-8 py-20 lg:py-28")}>
+      <Rule label="before you sign up" />
+
+      <h2 className="sk-hand-display mt-6 max-w-[16ch] text-[2.5rem] text-text sm:text-[3.25rem]">
+        The things people ask first
+      </h2>
+
+      {/* <details> so it works with no JavaScript and stays keyboard-operable. */}
+      <div className="mt-12 grid gap-5 lg:grid-cols-2">
+        {FAQS.map(([q, a], i) => (
+          <details
+            key={q}
+            open={i === 0}
+            className={cn(
+              "sk-edge sk-cast group px-5",
+              i % 3 === 1 && "sk-b",
+              i % 3 === 2 && "sk-c",
+            )}
+          >
+            <summary className="sk-hand flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-[1.25rem] leading-snug text-text [&::-webkit-details-marker]:hidden">
+              {q}
+              <span
+                aria-hidden="true"
+                className="shrink-0 text-2xl text-primary transition-transform duration-200 group-open:rotate-45"
+              >
+                +
+              </span>
+            </summary>
+            <p className="max-w-[60ch] pb-5 text-[0.9375rem] leading-relaxed text-muted">
+              {a}
+            </p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── closing ───────────────────────────────────────────────────────────── */
+
+function Closing({ signedIn }: { signedIn: boolean }) {
+  return (
+    <section className={cn(SHELL, "py-20 text-center lg:py-28")}>
+      <div className="mx-auto max-w-[34rem]">
+        <h2 className="sk-hand-display text-[2.75rem] text-text sm:text-[3.5rem]">
+          Bring the notes you
+          <br />
+          <span className="relative inline-block text-primary">
+            already have
+            <SketchUnderline className="-bottom-[0.06em] h-[0.2em]" />
+          </span>
+        </h2>
+        <p className="mx-auto mt-7 max-w-[42ch] text-[1.0625rem] leading-relaxed text-muted">
+          You&rsquo;ll have cards before you&rsquo;ve finished deciding whether
+          this was worth it. Your first deck takes about a minute.
+        </p>
+
+        <div className="mt-9 flex flex-wrap justify-center gap-3">
+          <SkButton href={signedIn ? "/decks" : "/sign-up"} size="lg">
+            {signedIn ? "go to your decks" : "make your first deck"}
+          </SkButton>
+          {signedIn ? null : (
+            <SkButton href="/sign-in" tone="plain" size="lg">
+              sign in
+            </SkButton>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── footer ────────────────────────────────────────────────────────────── */
+
+function Footer() {
+  return (
+    <footer className="border-t-2" style={{ borderColor: "var(--ink)" }}>
+      <div
+        className={cn(
+          SHELL,
+          "flex flex-wrap items-center justify-between gap-x-8 gap-y-4 py-10",
+        )}
+      >
+        <Link href="/" className="sk-hand-display text-2xl text-text">
+          Achi
         </Link>
-        <nav aria-label="Footer" className="-my-2 flex flex-wrap gap-x-5 max-sm:gap-x-3">
+
+        <nav
+          aria-label="Footer"
+          className="-my-2 flex flex-wrap gap-x-6 gap-y-1"
+        >
           {[
-            ["#tour", "How it works"],
-            ["#faq", "Questions"],
-            ["/sign-in", "Sign in"],
-            ["/sign-up", "Get started"],
+            ["#loop", "how it works"],
+            ["#faq", "questions"],
+            ["/sign-in", "sign in"],
+            ["/sign-up", "get started"],
           ].map(([href, label]) => (
             <Link
               key={href}
               href={href}
-              className="flex min-h-11 items-center text-sm text-muted transition-colors duration-[var(--dur-fast)] hover:text-text sm:min-h-0"
+              className="sk-hand flex min-h-11 items-center text-lg text-muted transition-colors hover:text-text sm:min-h-0"
             >
               {label}
             </Link>
           ))}
         </nav>
-        <p className="text-sm text-subtle">
-          Built for people with an exam on Monday.
+
+        <p className="sk-hand text-lg text-subtle">
+          built for people with an exam on Monday
         </p>
       </div>
     </footer>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-
-/** Nudges right on hover — the CTA's only flourish. */
-function Arrow() {
-  return (
-    <ArrowRightIcon className="size-4 transition-transform duration-[var(--dur)] ease-[var(--ease-out)] group-hover/btn:translate-x-0.5" />
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  body,
-  children,
-  className,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-  children?: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`h-full rounded-card border border-border bg-surface p-5 ${className ?? ""}`}
-    >
-      <span className="grid size-8 place-items-center rounded-control bg-primary-subtle text-primary">
-        {icon}
-      </span>
-      <h3 className="mt-3 text-md font-semibold tracking-tight text-text">
-        {title}
-      </h3>
-      <p className="mt-1.5 max-w-[62ch] text-base leading-relaxed text-muted">
-        {body}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function ExampleLine({
-  label,
-  text,
-  accent,
-}: {
-  label: string;
-  text: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-control border p-3 ${
-        accent
-          ? "border-primary-border bg-primary-subtle"
-          : "border-border bg-sunken"
-      }`}
-    >
-      <span className="label-data">{label}</span>
-      <p
-        className={`mt-1.5 text-sm leading-relaxed ${
-          accent ? "text-text" : "text-muted"
-        }`}
-      >
-        {text}
-      </p>
-    </div>
-  );
-}
-
-function Point({
-  icon,
-  term,
-  detail,
-}: {
-  icon: React.ReactNode;
-  term: string;
-  detail: string;
-}) {
-  return (
-    <div>
-      <dt className="flex items-center gap-2 text-base font-medium text-text">
-        <span className="text-primary">{icon}</span>
-        {term}
-      </dt>
-      <dd className="mt-1 text-base leading-relaxed text-muted">{detail}</dd>
-    </div>
   );
 }

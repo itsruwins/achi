@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sketch";
 import { getSessionUser } from "@/features/auth/queries";
 import { SketchCard } from "@/features/marketing/components/sketch-card";
+import { SketchStrip } from "@/features/marketing/components/sketch-strip";
 import { cn } from "@/lib/utils/cn";
 
 import "./sketch.css";
@@ -84,7 +85,7 @@ export default async function Home() {
 
       <main className="flex-1">
         <Hero signedIn={signedIn} />
-        <SampleStrip />
+        <SketchStrip />
         <Loop />
         <Modes />
         <Schedule />
@@ -206,7 +207,7 @@ function Header({ signedIn }: { signedIn: boolean }) {
 
 function Hero({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className={cn(SHELL, "pb-20 pt-6 sm:pt-10 lg:pb-28")}>
+    <section className={cn(SHELL, "pb-10 pt-6 sm:pt-10 lg:pb-12")}>
       {/*
         Asymmetric and overlapping rather than a centred column. The old hero
         centred everything and stacked the card underneath; here the text and
@@ -285,53 +286,6 @@ function Hero({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-/* ── sample strip ──────────────────────────────────────────────────────── */
-
-const SAMPLES: [string, string][] = [
-  [
-    "Anatomy",
-    "Which nerve carries taste from the anterior two-thirds of the tongue?",
-  ],
-  ["Org. Chem", "SN1 or SN2 — which favours a tertiary substrate?"],
-  ["Consti Law", "What must a warrant be supported by?"],
-  ["Microecon", "Define price elasticity of demand."],
-  ["Pharmacology", "Which beta blockers are cardioselective?"],
-  ["Phil. History", "What did the Malolos Constitution establish?"],
-];
-
-/**
- * Sample questions drifting past.
- *
- * The track holds two identical copies and translates by exactly -50%, so the
- * loop lands on a frame identical to its start. The duplicate is aria-hidden,
- * so a screen reader gets the list once.
- */
-function SampleStrip() {
-  return (
-    <div
-      className="overflow-hidden border-y-2 py-3.5"
-      style={{ borderColor: "var(--ink)", background: "var(--surface-sunken)" }}
-    >
-      <div className="relative [mask-image:linear-gradient(90deg,transparent,black_5rem,black_calc(100%-5rem),transparent)]">
-        <ul className="flex w-max animate-[achi-marquee_52s_linear_infinite] items-center motion-reduce:animate-none">
-          {[...SAMPLES, ...SAMPLES].map(([subject, question], i) => (
-            <li
-              key={`${subject}-${i}`}
-              className="flex shrink-0 items-center gap-3 pr-10"
-              aria-hidden={i >= SAMPLES.length || undefined}
-            >
-              <span className="sk-mono shrink-0 text-primary">{subject}</span>
-              <span className="sk-hand whitespace-nowrap text-lg text-muted">
-                {question}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
 /* ── the loop ──────────────────────────────────────────────────────────── */
 
 const STEPS: [string, string, string][] = [
@@ -359,7 +313,7 @@ const STEPS: [string, string, string][] = [
 
 function Loop() {
   return (
-    <section id="loop" className={cn(SHELL, "scroll-mt-8 py-20 lg:py-28")}>
+    <section id="loop" className={cn(SHELL, "scroll-mt-8 pb-20 pt-10 lg:pb-28 lg:pt-12")}>
       <Rule label="the loop" />
 
       <h2 className="sk-hand-display mt-6 max-w-[16ch] text-[2.5rem] text-text sm:text-[3.25rem]">

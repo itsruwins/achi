@@ -635,6 +635,18 @@
   itself — a filtered element can't establish a 3D rendering context, and the
   button carries the focus ring.
 */
+/*
+  A drifting track has to stop before it can be operated.
+
+  `focus-within` matters as much as `hover`: without it a keyboard user tabs
+  into a card that is still sliding out from under them, and the flip they
+  trigger lands off-screen.
+*/
+.sk-marquee:hover .sk-marquee-track,
+.sk-marquee:focus-within .sk-marquee-track {
+  animation-play-state: paused;
+}
+
 .sk-flip {
   perspective: 1400px;
 }

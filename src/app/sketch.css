@@ -80,6 +80,17 @@
   --selection: oklch(0.545 0.185 358 / 0.24);
   --selection-fg: oklch(0.190 0.050 355);
 
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     Product pace even on a brand surface: fast enough that the UI feels like
+     it answered, never long enough to sit through. Exponential ease-out only,
+     no bounce — a drawn system already has personality in its edges, and
+     springy easing on top reads as a second, competing accent. */
+  --sk-t-fast: 130ms;
+  --sk-t: 220ms;
+  --sk-t-slow: 420ms;
+  --sk-t-draw: 620ms;
+  --sk-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* ── Drawn edge ──────────────────────────────────────────────────────── */
   --sk-stroke-w: 2px;
   --sk-radius: 12px;
@@ -441,6 +452,168 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/*
+  Press into your own shadow.
+
+  The canonical move for a drawn button, and much better than nudging it 1px:
+  the offset collapses to zero while the element travels by exactly the offset
+  distance, so the button visibly sits down onto the page. `--sk-cast` is read
+  by the ::before, and custom properties inherit into pseudo-elements, so
+  changing it on :active is enough to drive the shadow.
+
+  It animates to `0 0 0` rather than to `none` — box-shadow can't interpolate
+  to a keyword, and `none` would snap instead of collapsing.
+*/
+.sk-press {
+  transition: transform var(--sk-t-fast) var(--sk-ease);
+}
+
+.sk-press::before {
+  transition:
+    box-shadow var(--sk-t-fast) var(--sk-ease),
+    filter var(--sk-t-fast) var(--sk-ease);
+}
+
+.sk-press:active {
+  transform: translate(3px, 3px);
+  --sk-cast: 0 0 0 var(--ink);
+}
+
+/* Lift. The card rises and its cast lengthens, as if picked up off the page. */
+.sk-lift {
+  transition: transform var(--sk-t) var(--sk-ease);
+}
+
+.sk-lift::before {
+  transition: box-shadow var(--sk-t) var(--sk-ease);
+}
+
+.sk-lift:hover {
+  transform: translate(-2px, -3px);
+  --sk-cast: 8px 9px 0 var(--ink);
+}
+
+.sk-lift:active {
+  transform: translate(1px, 1px);
+  --sk-cast: 2px 2px 0 var(--ink);
+}
+
+/*
+  Redraw on hover.
+
+  CSS cannot interpolate an SVG filter primitive's attributes, so a smooth
+  undulating edge would need SMIL animating baseFrequency — expensive, and it
+  re-runs the filter every frame. Swapping to a differently-seeded filter costs
+  one repaint and reads better anyway: the edge snaps to a *new* drawing of
+  itself, the way redrawing a line by hand actually looks, rather than melting.
+*/
+.sk-live:hover::before {
+  filter: url(#sk-wob-hover);
+}
+
+/*
+  Lines that draw themselves.
+
+  Every animated path carries `pathLength="1"`, which normalises its length to
+  1 unit regardless of the actual geometry — so one keyframe works for a short
+  underline and a long connector alike, with no per-path measuring.
+
+  Both animations use `both` fill so the final frame holds. That matters more
+  than usual here: the start frame is an invisible line, so anything that
+  prevents the animation finishing would leave the mark permanently missing.
+*/
+@keyframes sk-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.sk-draw path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* On load — the hero underline only. */
+.sk-draw-load path {
+  animation: sk-draw var(--sk-t-draw) var(--sk-ease) 260ms both;
+}
+
+/*
+  On scroll — the loop connectors.
+
+  Driven by a view-progress timeline rather than an IntersectionObserver: no
+  JavaScript, no hydration cost, and nothing to clean up. Where
+  `animation-timeline` is unsupported the declaration is dropped and the
+  time-based animation below runs on load instead — which still ends with the
+  line drawn, so the mark is never missing.
+*/
+.sk-draw-view path {
+  animation: sk-draw var(--sk-t-draw) var(--sk-ease) both;
+}
+
+@supports (animation-timeline: view()) {
+  .sk-draw-view path {
+    animation-timeline: view();
+    animation-range: entry 15% cover 32%;
+    animation-delay: 0s;
+  }
+}
+
+/*
+  Card flip.
+
+  The probe confirmed a filtered pseudo-element survives 3D rotation and that
+  backface-visibility still culls correctly, so this is a real flip rather than
+  a crossfade. preserve-3d sits on the inner element, never on the <button>
+  itself — a filtered element can't establish a 3D rendering context, and the
+  button carries the focus ring.
+*/
+.sk-flip {
+  perspective: 1400px;
+}
+
+.sk-flip-inner {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform var(--sk-t-slow) var(--sk-ease);
+}
+
+.sk-flip-inner[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.sk-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.sk-flip-back {
+  transform: rotateY(180deg);
+}
+
+/* Entrance. Used on the hero only, and it enhances an already-visible
+   default: the element is fully opaque at rest, so if the animation never
+   runs, nothing is hidden. */
+@keyframes sk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.sk-rise {
+  animation: sk-rise var(--sk-t-slow) var(--sk-ease) both;
+}
+
 .sk ::selection {
   background: var(--selection);
   color: var(--selection-fg);
@@ -451,6 +624,53 @@
   outline-offset: 3px;
 }
 
+/*
+  Disclosure.
+
+  <details> can't be transitioned the obvious way: its content is not rendered
+  while closed, so there is no box to animate from. `::details-content` is the
+  hook that exposes it, and `interpolate-size: allow-keywords` is what lets a
+  height animate to and from `auto` without measuring anything in JavaScript.
+  `content-visibility` has to be listed with `allow-discrete` or the content
+  pops in at frame one and the height animation plays behind already-visible
+  text.
+
+  Progressive enhancement throughout: where `::details-content` is unsupported
+  the whole block is dropped and the panel opens instantly, exactly as it does
+  today. Nothing depends on it.
+*/
+@supports (interpolate-size: allow-keywords) {
+  .sk {
+    interpolate-size: allow-keywords;
+  }
+}
+
+.sk details::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    block-size var(--sk-t) var(--sk-ease),
+    opacity var(--sk-t) var(--sk-ease),
+    content-visibility var(--sk-t) allow-discrete;
+}
+
+.sk details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Reduced motion
+
+   Not a blanket duration kill. Two of the effects here start from a state the
+   user must never be left in — an undrawn line and a collapsed reveal — so
+   those are switched off at the source and pinned to their finished frame
+   instead of being run very fast. A scroll-driven animation in particular
+   can't be fixed by shortening its duration, because its progress comes from
+   the scroll position rather than from time.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: reduce) {
   .sk *,
   .sk *::before,
@@ -458,5 +678,23 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Drawn, not drawing. */
+  .sk-draw path,
+  .sk-draw-load path,
+  .sk-draw-view path {
+    animation: none !important;
+    animation-timeline: auto !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .sk-rise {
+    animation: none !important;
+  }
+
+  /* The flip still has to change faces, just without the rotation. */
+  .sk-flip-inner {
+    transition: none;
   }
 }

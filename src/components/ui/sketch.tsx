@@ -38,6 +38,10 @@ export function SketchDefs() {
           // Small controls take a finer grade. Amplitude is absolute, so the
           // same wobble that reads as drawn on a card reads as lumpy on a chip.
           ["sk-wob-fine", 7, 0.028, 2.3],
+          // Hover. A fourth seed at the same grade, so pointing at any element
+          // redraws its edge visibly no matter which seed it started on —
+          // swapping a.→b. would be a no-op for anything already using b.
+          ["sk-wob-hover", 41, 0.019, 4.6],
         ].map(([id, seed, freq, scale]) => (
           <filter
             key={id}
@@ -86,12 +90,16 @@ export function SketchUnderline({ className }: { className?: string }) {
       focusable="false"
       className={cn("pointer-events-none absolute inset-x-0 w-full", className)}
     >
+      {/* pathLength normalises the geometry to 1 unit, so a single
+          stroke-dasharray keyframe drives this and the connector alike with no
+          per-path measuring. */}
       <path
         d="M 3 13 Q 40 5, 78 11 Q 116 17, 154 10 Q 192 3, 230 11 Q 268 17, 297 9"
         fill="none"
         stroke="currentColor"
         strokeWidth="3.25"
         strokeLinecap="round"
+        pathLength={1}
         vectorEffect="non-scaling-stroke"
       />
     </svg>
@@ -174,6 +182,7 @@ export function SketchConnector({ className }: { className?: string }) {
         strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        pathLength={1}
       />
     </svg>
   );

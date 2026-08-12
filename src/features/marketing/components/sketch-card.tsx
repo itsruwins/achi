@@ -68,44 +68,43 @@ export function SketchCard() {
 
   return (
     <div className="w-full max-w-[26rem]">
+      {/*
+        A real 3D flip. The probe confirmed the displacement-filtered edge
+        survives rotation and that backface-visibility still culls correctly,
+        so this rotates rather than crossfading.
+
+        preserve-3d lives on the inner element, never on the <button>: a
+        filtered element can't establish a 3D rendering context, and the button
+        is what carries the focus ring. The button also keeps the height —
+        both faces are absolutely positioned, so something has to hold the box
+        open or the card would collapse to nothing.
+      */}
       <button
         type="button"
         onClick={flip}
         aria-pressed={flipped}
-        className={cn(
-          "sk-edge sk-cast sk-tilt-r group relative block w-full text-left",
-          "min-h-[15rem] p-6 sm:min-h-[16.5rem] sm:p-7",
-          "transition-transform duration-[200ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-          "hover:-translate-y-0.5 active:translate-y-px",
-        )}
+        className="sk-flip sk-tilt-r block h-[16rem] w-full text-left sm:h-[17.5rem]"
       >
-        <span className="sk-mono block">{card.topic}</span>
-
-        {/*
-          Both faces are always in the DOM and the hidden one is inert, rather
-          than swapping text on flip: swapping would let the card resize between
-          states and shift the page under the cursor mid-click.
-        */}
-        <span className="mt-5 block">
-          <span
-            className={cn(
-              "block text-[1.35rem] leading-snug text-text sm:text-[1.5rem]",
-              flipped && "hidden",
-            )}
-          >
-            {card.front}
-          </span>
-
-          <span className={cn("block", !flipped && "hidden")}>
-            <span className="sk-mono block text-primary">Answer</span>
-            <span className="mt-2 block text-[1.2rem] leading-snug text-text sm:text-[1.3rem]">
-              {card.back}
+        <span className="sk-flip-inner block" data-flipped={flipped}>
+          <span className="sk-flip-face sk-edge sk-cast sk-lift sk-live block p-6 sm:p-7">
+            <span className="sk-mono block">{card.topic}</span>
+            <span className="mt-5 block text-[1.35rem] leading-snug text-text sm:text-[1.5rem]">
+              {card.front}
+            </span>
+            <span className="sk-hand absolute bottom-6 left-6 block text-base text-subtle sm:left-7">
+              tap to see the answer
             </span>
           </span>
-        </span>
 
-        <span className="sk-hand mt-6 block text-base text-subtle">
-          {flipped ? "tap to flip back" : "tap to see the answer"}
+          <span className="sk-flip-face sk-flip-back sk-edge sk-cast sk-b sk-lift sk-live block p-6 sm:p-7">
+            <span className="sk-mono block text-primary">Answer</span>
+            <span className="mt-5 block text-[1.2rem] leading-snug text-text sm:text-[1.3rem]">
+              {card.back}
+            </span>
+            <span className="sk-hand absolute bottom-6 left-6 block text-base text-subtle sm:left-7">
+              tap to flip back
+            </span>
+          </span>
         </span>
       </button>
 

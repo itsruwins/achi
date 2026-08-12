@@ -124,9 +124,7 @@ function SkButton({
     <Link
       href={href}
       className={cn(
-        "sk-edge sk-cast-sm sk-fine inline-flex items-center justify-center gap-2 font-semibold",
-        "transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        "hover:-translate-y-0.5 active:translate-y-px",
+        "sk-edge sk-cast-sm sk-fine sk-press sk-live inline-flex items-center justify-center gap-2 font-semibold",
         size === "lg"
           ? "min-h-[3.25rem] px-6 text-[1.0625rem]"
           : "min-h-11 px-4 text-[0.9375rem]",
@@ -222,9 +220,11 @@ function Hero({ signedIn }: { signedIn: boolean }) {
             <br />
             this by Thursday.
             <br />
+            {/* The one load-time moment on the page: the line strokes itself
+                under the word rather than simply being there. */}
             <span className="relative inline-block text-primary">
               Unless.
-              <SketchUnderline className="-bottom-[0.06em] h-[0.2em]" />
+              <SketchUnderline className="sk-draw sk-draw-load -bottom-[0.06em] h-[0.2em]" />
             </span>
           </h1>
 
@@ -382,7 +382,7 @@ function Loop() {
           <li key={num} className="relative">
             <div
               className={cn(
-                "sk-edge sk-cast h-full p-5",
+                "sk-edge sk-cast sk-lift sk-live h-full p-5",
                 i % 3 === 1 && "sk-b",
                 i % 3 === 2 && "sk-c",
               )}
@@ -399,7 +399,7 @@ function Loop() {
             {i < STEPS.length - 1 ? (
               <SketchConnector
                 aria-hidden="true"
-                className="absolute left-full top-1/2 hidden h-5 w-9 -translate-y-1/2 translate-x-[0.375rem] text-[var(--ink-soft)] lg:block"
+                className="sk-draw sk-draw-view absolute left-full top-1/2 hidden h-5 w-9 -translate-y-1/2 translate-x-[0.375rem] text-[var(--ink-soft)] lg:block"
               />
             ) : null}
           </li>
@@ -452,7 +452,7 @@ function Modes() {
             <li
               key={title}
               className={cn(
-                "sk-edge sk-cast p-5",
+                "sk-edge sk-cast sk-lift sk-live p-5",
                 i % 3 === 1 && "sk-b",
                 i % 3 === 2 && "sk-c",
                 // The barely-there grade. A row of four at the full tilt reads
@@ -567,7 +567,7 @@ function Numbers() {
             <div
               key={figure}
               className={cn(
-                "sk-edge sk-cast sk-fill-none p-6",
+                "sk-edge sk-cast sk-fill-none sk-live p-6",
                 i % 3 === 1 && "sk-b",
                 i % 3 === 2 && "sk-c",
               )}
@@ -630,14 +630,20 @@ function Faq() {
         The things people ask first
       </h2>
 
-      {/* <details> so it works with no JavaScript and stays keyboard-operable. */}
-      <div className="mt-12 grid gap-5 lg:grid-cols-2">
+      {/*
+        <details> so it works with no JavaScript and stays keyboard-operable.
+
+        `items-start` is load-bearing, not cosmetic. Grid items stretch by
+        default, so an open panel inflated its closed neighbour in the same row
+        into a tall empty drawn box. Each card now sizes to its own content.
+      */}
+      <div className="mt-12 grid items-start gap-5 lg:grid-cols-2">
         {FAQS.map(([q, a], i) => (
           <details
             key={q}
             open={i === 0}
             className={cn(
-              "sk-edge sk-cast group px-5",
+              "sk-edge sk-cast sk-live group px-5",
               i % 3 === 1 && "sk-b",
               i % 3 === 2 && "sk-c",
             )}
@@ -672,7 +678,7 @@ function Closing({ signedIn }: { signedIn: boolean }) {
           <br />
           <span className="relative inline-block text-primary">
             already have
-            <SketchUnderline className="-bottom-[0.06em] h-[0.2em]" />
+            <SketchUnderline className="sk-draw sk-draw-view -bottom-[0.06em] h-[0.2em]" />
           </span>
         </h2>
         <p className="mx-auto mt-7 max-w-[42ch] text-[1.0625rem] leading-relaxed text-muted">

@@ -2,39 +2,29 @@
 
 import { useState } from "react";
 
-import { SketchConnector } from "@/components/ui/sketch";
 import { cn } from "@/lib/utils/cn";
 
 /**
  * Sample cards, drifting past — and every one of them is a real card.
  *
- * Each entry flips on click exactly like the hero card, rather than the strip
- * showing pre-flipped answers as separate items. Where a card was written from
- * source material, the notes sit *beside* it with an arrow between, so the
- * paste-in / card-out idea reads as one object instead of two positions in a
- * queue.
+ * Each flips on click exactly like the hero card, so the strip demonstrates the
+ * card format rather than asserting it. None of these questions appear in the
+ * hero deck, so nothing is duplicated between the two.
  *
- * None of these questions appear in the hero deck, so nothing is duplicated
- * between the two.
- *
- * The track pauses on hover and on focus-within. That isn't decoration: a card
- * you have to click while it slides away is a moving target, and without the
- * pause the flip is effectively unusable with a mouse and impossible to reach
- * by keyboard.
+ * The track pauses on hover and on keyboard focus. That isn't decoration: a
+ * card you have to click while it slides away is a moving target, and without
+ * the pause the flip is barely usable with a mouse and unreachable by keyboard.
  */
 
 type Item = {
   subject: string;
   front: string;
   back: string;
-  /** Source material this card was written from, shown alongside it. */
-  note?: string;
 };
 
 const STRIP: Item[] = [
   {
     subject: "Biochem",
-    note: "…PFK-1 catalyses the committed step of glycolysis…",
     front: "Which enzyme is the rate-limiting step of glycolysis?",
     back: "Phosphofructokinase-1 — the committed step of the pathway.",
   },
@@ -50,7 +40,6 @@ const STRIP: Item[] = [
   },
   {
     subject: "Engineering",
-    note: "…Young's modulus = stress ÷ strain, and only within the elastic region…",
     front: "What does Young's modulus actually measure?",
     back: "Stiffness — a material's resistance to elastic deformation.",
   },
@@ -66,7 +55,6 @@ const STRIP: Item[] = [
   },
   {
     subject: "Phil History",
-    note: "…at Pugad Lawin, August 1896, the Katipuneros tore up their cédulas…",
     front: "What did the Cry of Pugad Lawin begin?",
     back: "The Philippine Revolution against Spanish rule.",
   },
@@ -91,11 +79,12 @@ export function SketchStrip() {
         gap, the full width contains one more gap than the half-width does, so
         translating exactly -50% lands half a gap off and the loop jumps.
 
-        Duration scales with the item count — it's total travel time, so adding
-        cards at a fixed duration silently speeds the drift up.
+        Duration is total travel time, so it has to track the width of the set:
+        it came down from 86s when the notes cards were removed, or the same set
+        over a shorter track would have drifted noticeably slower.
       */}
       <div className="sk-marquee overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,black_5rem,black_calc(100%-5rem),transparent)]">
-        <ul className="sk-marquee-track flex w-max animate-[achi-marquee_86s_linear_infinite] items-stretch motion-reduce:animate-none">
+        <ul className="sk-marquee-track flex w-max animate-[achi-marquee_64s_linear_infinite] items-stretch motion-reduce:animate-none">
           {[...STRIP, ...STRIP].map((item, i) => {
             // The second copy exists only so the loop can seam. It's hidden
             // from readers and made inert, because it contains real buttons —
@@ -110,42 +99,13 @@ export function SketchStrip() {
                 aria-hidden={duplicate || undefined}
                 inert={duplicate || undefined}
               >
-                <Entry item={item} seed={i} />
+                <FlipCard item={item} seed={i} />
               </li>
             );
           })}
         </ul>
       </div>
     </section>
-  );
-}
-
-function Entry({ item, seed }: { item: Item; seed: number }) {
-  if (!item.note) return <FlipCard item={item} seed={seed} />;
-
-  return (
-    <div className="flex items-center gap-2">
-      {/* The source, on the second surface — raw material rather than output,
-          and deliberately not a card, so it never looks flippable. */}
-      <div
-        className={cn(
-          "sk-edge sk-cast-sm sk-fill-sunken sk-live h-[7.75rem] w-[12.5rem] px-3.5 py-3",
-          seed % 2 === 0 ? "sk-tilt-a" : "sk-tilt-b",
-        )}
-      >
-        <span className="sk-mono block text-subtle">your notes</span>
-        <p className="mt-1 text-[0.875rem] leading-snug text-muted">
-          {item.note}
-        </p>
-      </div>
-
-      <SketchConnector
-        aria-hidden="true"
-        className="h-5 w-8 shrink-0 text-[var(--ink-soft)]"
-      />
-
-      <FlipCard item={item} seed={seed + 1} />
-    </div>
   );
 }
 

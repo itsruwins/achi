@@ -638,12 +638,21 @@
 /*
   A drifting track has to stop before it can be operated.
 
-  `focus-within` matters as much as `hover`: without it a keyboard user tabs
-  into a card that is still sliding out from under them, and the flip they
-  trigger lands off-screen.
+  Hover is the main case, and `:has(:focus-visible)` covers the keyboard one —
+  without it, tabbing into a card means aiming at something still sliding out
+  from under you.
+
+  It is deliberately NOT `:focus-within`, which was the first attempt and was
+  wrong: clicking a button focuses it, so the track stayed paused after the
+  pointer left and only resumed once focus moved somewhere else. `:focus-visible`
+  matches only focus the browser decides to indicate — a Tab, not a mouse click —
+  so the keyboard case is preserved and clicking no longer latches the pause.
+
+  Nothing is lost for the mouse: while you're reading a card you just flipped,
+  your pointer is still on it, so hover is already holding the track.
 */
 .sk-marquee:hover .sk-marquee-track,
-.sk-marquee:focus-within .sk-marquee-track {
+.sk-marquee:has(:focus-visible) .sk-marquee-track {
   animation-play-state: paused;
 }
 
